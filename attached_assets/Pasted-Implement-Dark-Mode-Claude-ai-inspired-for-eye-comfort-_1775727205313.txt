@@ -1,0 +1,53 @@
+Implement Dark Mode (Claude.ai inspired) for eye comfort:
+
+1. **Dark Mode Color Palette**
+   - Background: #0d1117 (deep charcoal, not pure black)
+   - Cards: #1a1f2e (slightly lighter than background)
+   - Text primary: #e8eaed (off-white, not blinding)
+   - Text secondary: #9ca3af (muted gray)
+   - Borders: #2d3748 (subtle, barely visible)
+   - Hover states: #1f2937 (slightly lighter)
+
+2. **Accent Colors (Dark Mode)**
+   - Primary action (Blue): #60a5fa (soft blue, visible on dark)
+   - Success (Green): #4ade80 (soft green)
+   - Alert (Red): #f87171 (soft red)
+   - Gold (Celebration): #fbbf24 (warm gold)
+   - All colors adjusted for dark background contrast
+
+3. **Typography for Dark Mode**
+   - Font weight: 500 instead of 400 (bolder for visibility)
+   - Line height: 1.6 instead of 1.5 (more breathing room)
+   - Letter spacing: +0.3px (subtle increase for readability)
+   - No pure white text (use #e8eaed instead)
+
+4. **Dark Mode Components**
+   - Cards: #1a1f2e background, #2d3748 subtle borders
+   - Progress bars: Visible against dark background
+   - Charts: Adapt colors for dark (white/light lines on dark bg)
+   - Inputs: Dark background with light text
+   - Buttons: Use accent colors, clear contrast
+
+5. **Dark Mode Toggle**
+   - Add toggle in Settings
+   - Remember user preference (localStorage)
+   - Smooth transition between light/dark (0.3s)
+   - Apply to entire app (all pages/tabs)
+
+6. **Contrast Verification**
+   - Dark mode text vs background: ≥ 7:1 contrast ratio
+   - Test readability: Primary text on all background colors
+   - Ensure accessibility standards
+
+7. **NO Pure Black**
+   - Background #0d1117, not #000000
+   - Avoids eye strain
+   - Matches Claude.ai aesthetic
+
+8. **Test Dark Mode**
+   - Light mode: works as before
+   - Dark mode: eye-friendly, all text readable
+   - Toggle: switches smoothly between modes
+   - All dashboard cards visible in both modes
+
+Current status: Implement dark mode with Claude.ai-inspired palette for eye comfort. Add toggle in settings. Ensure contrast and readability in dark mode.

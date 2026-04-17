@@ -1,0 +1,131 @@
+═══════════════════════════════════════════════════════════════════════════════
+📱 PROMPT REPLIT — AMÉLIORATIONS UX (APP ORIGINALE)
+═══════════════════════════════════════════════════════════════════════════════
+
+OBJECTIF : Réduire modale + Alerte douce à 30% budget
+DURÉE : ~15 min
+FILES : 1 modification (BudgetCourses.tsx)
+
+════════════════════════════════════════════════════════════════════════════════
+
+INSTRUCTION :
+
+Modifier `/src/pages/BudgetCourses.tsx` (app originale, pas MVP test)
+
+Deux changements :
+
+1️⃣ RÉDUIRE LARGEUR MODALE (quand on ajoute une dépense)
+─────────────────────────────────────────────────────────
+
+Remplacer cette ligne :
+```tsx
+<div className="fixed inset-0 bg-black/50 flex items-end">
+  <div className="w-full bg-white rounded-t-2xl p-6 space-y-4">
+```
+
+Par :
+```tsx
+<div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+  <div className="w-full max-w-sm bg-white rounded-2xl p-6 space-y-4">
+```
+
+EFFET :
+- Modale centrée (pas full-width bas de l'écran)
+- Largeur réduite : max 24rem (384px)
+- Coins arrondis complets
+- UX plus "focus" (moins invasive)
+
+════════════════════════════════════════════════════════════════════════════════
+
+2️⃣ ALERTE DOUCE À 30% BUDGET (Soft warning)
+──────────────────────────────────────────────
+
+Ajouter ceci APRÈS le widget "Dépensé/Restant" dans BudgetCourses :
+
+```tsx
+{/* ALERTE DOUCE À 30% */}
+{percentUsed >= 30 && percentUsed < 80 && (
+  <div className="p-3 bg-yellow-50 text-yellow-700 rounded-lg border border-yellow-200 text-sm flex items-center gap-2">
+    <span className="text-lg">💡</span>
+    <span>
+      Tu as utilisé <strong>{percentUsed.toFixed(0)}%</strong> de ton budget courses.
+      {restant > 0 && ` Reste ${restant.toFixed(2)}€ ce mois.`}
+    </span>
+  </div>
+)}
+
+{/* ALERTE CLAIRE À 80%+ (proche du dépassement) */}
+{percentUsed >= 80 && (
+  <div className="p-3 bg-orange-100 text-orange-700 rounded-lg border border-orange-300 text-sm flex items-center gap-2">
+    <span className="text-lg">⚠️</span>
+    <span>
+      <strong>{percentUsed.toFixed(0)}%</strong> du budget utilisé.
+      {restant > 0 
+        ? ` Plus que ${restant.toFixed(2)}€ pour finir le mois.`
+        : ` Budget dépassé !`
+      }
+    </span>
+  </div>
+)}
+```
+
+LOGIQUE :
+- 0-29% : Aucune alerte (c'est normal)
+- 30-79% : 💡 Alerte DOUCE (jaune clair, info)
+- 80%+ : ⚠️ Alerte CLAIRE (orange, warning)
+
+POURQUOI DEUX NIVEAUX ?
+- 30% = "Tiens, tu utilises ton budget, c'est bon de savoir"
+- 80% = "Attention, tu vas bientôt bloquer"
+
+════════════════════════════════════════════════════════════════════════════════
+
+CHECKLIST :
+
+☐ Modale réduite en largeur (max-w-sm)
+☐ Modale centrée à l'écran
+☐ Alerte 30-79% : jaune doux, info-friendly
+☐ Alerte 80%+ : orange, warning clair
+☐ Textes dynamiques (% + montant restant)
+☐ Aucune erreur console
+☐ Mobile : alerte lisible et réactive
+
+════════════════════════════════════════════════════════════════════════════════
+
+ITÉRATION FUTURE (NOTE POUR PLUS TARD) :
+
+Ces deux améliorations seront gardées ET améliorées :
+
+✅ V1 (maintenant) :
+- Modale étroite (mieux focalisée)
+- Alertes soft/clear à 30% et 80%
+
+✅ V2 (itération 1+) :
+- Le CLIENT (partenaire) choisit le seuil d'alerte
+  → Slider : "Alerte douce à X%" (default 30%)
+  → Slider : "Alerte claire à X%" (default 80%)
+- Notifications push (optionnel)
+- Son / vibration (optionnel)
+- Historique alertes (quand déclenchées)
+
+✅ V3+ :
+- Alertes par catégorie (Alimentation, Loisirs, etc.)
+- Prédictions : "Tu vas dépasser le budget dans 5 jours"
+- Recommandations smart
+
+════════════════════════════════════════════════════════════════════════════════
+
+POINT CLÉS À RETENIR :
+
+1. SOFT UX (30%) : Information, pas stress
+   → Jaune, doux, encourage la conscience
+   
+2. CLEAR UX (80%) : Action, warning légitime
+   → Orange, visible, urgence modérée
+
+3. CLIENT DECIDES (itération) : Les seuils
+   → Pas nous qui décidons c'est "30% et 80%"
+   → Le client peut dire "Je préfère alerte à 50%"
+   → Flexible dès itération 1
+
+════════════════════════════════════════════════════════════════════════════════

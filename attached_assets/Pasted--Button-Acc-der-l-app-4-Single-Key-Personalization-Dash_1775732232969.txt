@@ -1,0 +1,95 @@
+- Button: [Accéder à l'app]
+
+4. **Single Key Personalization - Dashboard Adaptation**
+   
+   IF Profile 1 (Plaisancier):
+   - Dashboard emphasize: Quick wins (✅ checkmarks)
+   - Message tone: Celebrate small steps
+   - Example metric: "Vous avez respecté le budget 4/7 jours!"
+   
+   IF Profile 2 (Économe):
+   - Dashboard emphasize: Growth metrics (épargne accumulation)
+   - Message tone: Money working for you
+   - Example metric: "Votre épargne: 15,000€ et elle grandit"
+   
+   IF Profile 3 (Chercheur):
+   - Dashboard emphasize: Action tracking
+   - Message tone: Discipline creates results
+   - Example metric: "Vous avez agi 47 fois ce mois"
+   
+   IF Profile 4 (Penseur):
+   - Dashboard emphasize: Action CTA buttons
+   - Message tone: Imperfect action beats perfect planning
+   - Example metric: "Ajouter vos dépenses d'aujourd'hui" [button]
+   
+   IF Profile 5 (Stratège):
+   - Dashboard emphasize: Long-term strategy + milestones
+   - Message tone: Building your empire
+   - Example metric: "Progression vers debt-free: 40%"
+
+5. **Optional Tips Section (Not Forced)**
+   - Location: Settings → "Conseils pour mon profil"
+   - Only if user clicks (optional, not on main dashboard)
+   - Content (1 tip per profile):
+     * Plaisancier: "Chaque petit geste compte - célébrez vos wins"
+     * Économe: "Faites travailler votre argent - investissement progressif"
+     * Chercheur: "Les règles strictes créent la richesse stable"
+     * Penseur: "Agissez, même imparfaitement - action > perfection"
+     * Stratège: "Diversifiez vos revenus - restez stratégique"
+   - These tips can be expanded in FUTURE coaching product
+
+6. **Firebase Storage**
+   - users/[uid]/profile/
+     * userType: "single" | "couple" (from PROMPT 4A)
+     * firstTimeSetupComplete: true/false
+     * quizCompleted: true/false
+     * quizAnswers: {
+         * q1: 0-4 (option index selected)
+         * q2: 0-4
+         * q3: 0-4
+         * q4: 0-4
+         * q5: 0-4
+       }
+     * profileType: "plaisancier" | "economiste" | "chercheur" | "penseur" | "strategiste"
+     * profileName: "Le Plaisancier" | etc (display name)
+     * profileDescription: "Vous privilégiez..."
+     * profileChallenge: "Flux tendu, peu d'épargne"
+     * profileTimestamp: [when taken - ISO format]
+     * profileVersion: 1 (for tracking evolution)
+
+7. **Profile Retake Logic**
+   - Settings option: "Refaire mon profil financier"
+   - User can retake anytime
+   - New answers overwrite old quizAnswers
+   - New profileType overwrites old profileType
+   - System tracks: previous profileType + profileTimestamp
+   - After 30-60 days: Optional prompt: "Votre profil a-t-il changé?"
+
+8. **Profile Evolution Tracking**
+   - After retake: Compare old profileType vs new profileType
+   - If changed: Show evolution message
+   - Example: "Vous étiez Penseur, maintenant Stratège! 🎊"
+   - Store evolution history (optional):
+     * profileHistory: [
+         { type: "penseur", timestamp: "2026-04-09" },
+         { type: "strategiste", timestamp: "2026-05-09" }
+       ]
+   - This validates: quiz works + user is progressing
+
+9. **Tone & Messaging**
+   - NEVER judgmental (no "you're a spender" blame)
+   - ALWAYS fluid (profile can change, not fixed)
+   - ALWAYS hopeful (focus on "what you can do")
+   - ALWAYS data-driven (future profiles based on behavior)
+   - Use neutral language: "Vous privilégiez" not "Vous êtes"
+
+10. **Integration with PROMPT 4B (Personalization Messages)**
+    - Once profileType is determined, use it to adapt app language
+    - IF Profile 1: Show celebration-focused messages
+    - IF Profile 2: Show growth-focused messages
+    - IF Profile 3: Show discipline-focused messages
+    - IF Profile 4: Show action-focused messages
+    - IF Profile 5: Show strategy-focused messages
+    - (Detailed language adaptations already in PROMPT 4B)
+
+Current status: Implement profile identification from quiz answers (index matching). Display non-judgmental results. Apply 1 key dashboard personalization per profile. Store profile + answers in Firebase. Optional tips in Settings. Profile can retake/evolve with history tracking.

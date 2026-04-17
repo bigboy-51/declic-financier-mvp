@@ -1,0 +1,155 @@
+═══════════════════════════════════════════════════════════════════════════════
+📋 PROMPT 3/3 : DASHBOARD + INTÉGRATION FINALE (SIMPLIFIÉ)
+═══════════════════════════════════════════════════════════════════════════════
+
+OBJECTIF : Créer dashboard avec 3 widgets synchronisés
+DURÉE : ~10 min
+FILES : 1 fichier (modification Dashboard.tsx)
+
+────────────────────────────────────────────────────────────────────────────
+
+INSTRUCTION :
+
+Modifier `/src/pages/Dashboard.tsx` (ou créer si n'existe pas)
+
+```typescript
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { db, auth } from "@/config/firebase";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { useChargesSummary } from "@/hooks/useChargesSummary";
+import { useBudgetCourses } from "@/hooks/useBudgetCourses";
+
+export default function Dashboard() {
+  const navigate = useNavigate();
+  const [revenus, setRevenus] = useState(0);
+  const [charges, setCharges] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [budgetPrevu, setBudgetPrevu] = useState(600);
+
+  const chargesSummary = useChargesSummary(charges);
+  const coursesSummary = useBudgetCourses(courses, budgetPrevu);
+
+  useEffect(() => {
+    const loadData = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      try {
+        // Charger charges
+        const chargesRef = collection(db, "users", user.uid, "charges");
+        const chargesSnap = await getDocs(chargesRef);
+        const chargesData = chargesSnap.docs.map((doc) => ({
+          id: doc.id,
+          name: doc.data().name,
+          montantPrevu: doc.data().montantPrevu,
+          montantReel: doc.data().montantReel,
+          montantRestant: doc.data().montantRestant,
+          custom: doc.data().custom,
+        }));
+        setCharges(chargesData);
+
+        // Charger courses
+        const coursesRef = collection(db, "users", user.uid, "budgetCourses");
+        const coursesQ = query(coursesRef, orderBy("date", "desc"));
+        const coursesSnap = await getDocs(coursesQ);
+        const coursesData = coursesSnap.docs.map((doc) => ({
+          id: doc.id,
+          date: doc.data().date?.toDate?.() || new Date(),
+          montant: doc.data().montant,
+          paymentMethod: doc.data().paymentMethod,
+          createdAt: doc.data().createdAt?.toDate?.() || new Date(),
+          updatedAt: doc.data().updatedAt?.toDate?.() || new Date(),
+        }));
+        setCourses(coursesData);
+
+        // Charger settings
+        const settingsRef = collection(db, "users", user.uid);
+        const settingsSnap = await getDocs(settingsRef);
+        const userData = settingsSnap.docs[0]?.data();
+        if (userData?.budgetCoursesPrevu) {
+          setBudgetPrevu(userData.budgetCoursesPrevu);
+        }
+
+        // Revenus (4790€ pour MVP)
+        setRevenus(4790);
+      } catch (error) {
+        console.error("Erreur chargement dashboard:", error);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  return (
+    <div className="p-4 space-y-4">
+      <h1 className="text-2xl font-bold mb-6">📊 Tableau de Bord</h1>
+
+      {/* REVENUS */}
+      <div
+        className="bg-blue-50 p-6 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100"
+        onClick={() => navigate("/dashboard")}
+      >
+        <p className="text-sm text-gray-600 mb-2">💰 Revenus</p>
+        <p className="text-3xl font-bold text-blue-600">{revenus.toFixed(2)}€</p>
+      </div>
+
+      {/* CHARGES */}
+      <div
+        className="bg-green-50 p-6 rounded-lg border border-green-200 cursor-pointer hover:bg-green-100"
+        onClick={() => navigate("/charges")}
+      >
+        <p className="text-sm text-gray-600 mb-2">💸 Charges du mois</p>
+        <div className="grid grid-cols-3 gap-2 text-sm">
+          <div>
+            <p className="text-gray-600">Prévu</p>
+            <p className="font-bold text-green-600">{chargesSummary.totalPrevu.toFixed(2)}€</p>
+          </div>
+          <div>
+            <p className="text-gray-600">Réel</p>
+            <p className="font-bold text-orange-600">{chargesSummary.totalReel.toFixed(2)}€</p>
+          </div>
+          <div>
+            <p className="text-gray-600">Restant</p>
+            <p className="font-bold text-blue-600">{chargesSummary.totalRestant.toFixed(2)}€</p>
+          </div>
+        </div>
+      </div>
+
+      {/* BUDGET COURSES */}
+      <div
+        className="bg-amber-50 p-6 rounded-lg border border-amber-200 cursor-pointer hover:bg-amber-100"
+        onClick={() => navigate("/budget-courses")}
+      >
+        <p className="text-sm text-gray-600 mb-2">🛒 Budget Courses</p>
+        <div className="grid grid-cols-3 gap-2 text-sm">
+          <div>
+            <p className="text-gray-600">Budget</p>
+            <p className="font-bold text-blue-600">{budgetPrevu.toFixed(2)}€</p>
+          </div>
+          <div>
+            <p className="text-gray-600">Dépensé</p>
+            <p className="font-bold text-orange-600">{coursesSummary.totalDuMois.toFixed(2)}€</p>
+          </div>
+          <div>
+            <p className="text-gray-600">Restant</p>
+            <p className={`font-bold ${coursesSummary.restant >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {coursesSummary.restant.toFixed(2)}€
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+CHECKLIST PROMPT 3/3 :
+☐ Dashboard.tsx modifié (3 widgets)
+☐ Tous les widgets chargent les données Firestore
+☐ Calculs synchro avec Charges/Budget Courses
+☐ Clickable sur widgets (redirect /charges et /budget-courses)
+☐ Aucune erreur console
+☐ Données persistent après refresh
+
+════════════════════════════════════════════════════════════════════════════

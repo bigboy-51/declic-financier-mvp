@@ -1,0 +1,245 @@
+═══════════════════════════════════════════════════════════════════════════════
+BUDGET COURSES — ÉTAPE 1/3 : Migration Grocery + Structure Firebase
+═══════════════════════════════════════════════════════════════════════════════
+
+OBJECTIF : Migrer Grocery (25 mars - 12 avril 2026) en Budget Courses + créer structure
+
+═══════════════════════════════════════════════════════════════════════════════
+
+1. CRÉER STRUCTURE FIRESTORE
+
+Créer collection : /users/{uid}/budgetCourses/
+
+Structure d'une dépense:
+{
+  id: auto-generated,
+  date: "2026-04-14",
+  montant: 30,
+  moyenPaiement: "CB", // "CB" | "Cash" | "Retrait" | "Chèque"
+  createdAt: timestamp,
+  updatedAt: timestamp,
+  source: "migrated" // ou "manual" (pour tracker origin)
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+
+2. CRÉER LE SCRIPT DE MIGRATION
+
+Créer `/src/utils/migrateGrocery.ts` :
+
+import { db, auth } from "@/config/firebase";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  doc,
+  setDoc,
+  getDoc,
+  query,
+  where,
+} from "firebase/firestore";
+
+export const migrateGroceryToBudgetCourses = async () => {
+  const user = auth.currentUser;
+  if (!user) {
+    console.log("❌ No user logged in");
+    return { success: false, migrated: 0 };
+  }
+
+  try {
+    const userRef = doc(db, "users", user.uid);
+    const groceryRef = collection(db, "users", user.uid, "groceryExpenses");
+    const budgetCoursesRef = collection(db, "users", user.uid, "budgetCourses");
+
+    // VÉRIFIER SI MIGRATION DÉJÀ FAITE
+    const userDoc = await getDoc(userRef);
+    const migrationDone = userDoc.data()?.groceryMigrationDone || false;
+
+    if (migrationDone) {
+      console.log("✅ Migration Grocery déjà effectuée, skip");
+      return { success: false, migrated: 0 };
+    }
+
+    // RÉCUPÉRER TOUTES LES GROCERY
+    const allGrocery = await getDocs(groceryRef);
+
+    // FILTRER PAR PLAGE DE DATE (25 mars - 12 avril 2026)
+    const migrationStart = new Date("2026-03-25");
+    const migrationEnd = new Date("2026-04-12");
+
+    const groceryToMigrate = allGrocery.docs.filter((doc) => {
+      const data = doc.data();
+      const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+      return createdAt >= migrationStart && createdAt <= migrationEnd;
+    });
+
+    console.log(`📊 Migration en cours...`);
+    console.log(`Grocery trouvées (25 mars - 12 avril): ${groceryToMigrate.length}`);
+
+    if (groceryToMigrate.length === 0) {
+      console.log("ℹ️ Aucune grocery à migrer dans cette plage");
+      await setDoc(userRef, { groceryMigrationDone: true }, { merge: true });
+      return { success: true, migrated: 0 };
+    }
+
+    // MIGRER CHAQUE GROCERY EN BUDGET COURSES
+    console.log("➕ Création des dépenses Budget Courses...");
+    const migratePromises = groceryToMigrate.map((doc) => {
+      const data = doc.data();
+      const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+      
+      return addDoc(budgetCoursesRef, {
+        date: createdAt.toISOString().split('T')[0], // Format: YYYY-MM-DD
+        montant: data.amount || 0,
+        moyenPaiement: "Cash", // Default (Grocery n'a pas ce champ généralement)
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        source: "migrated",
+        originalGroceryId: doc.id,
+      });
+    });
+
+    await Promise.all(migratePromises);
+
+    // MARQUER MIGRATION COMME FAITE
+    await setDoc(userRef, { groceryMigrationDone: true }, { merge: true });
+
+    console.log(`✅ Migration réussie : ${groceryToMigrate.length} dépenses migrées`);
+    return { success: true, migrated: groceryToMigrate.length };
+  } catch (error) {
+    console.error("❌ Erreur migration Grocery:", error);
+    return { success: false, migrated: 0 };
+  }
+};
+
+═══════════════════════════════════════════════════════════════════════════════
+
+3. CRÉER LE HOOK usebudgetCourses
+
+Créer `/src/hooks/useBudgetCourses.ts` :
+
+import { useState, useEffect } from 'react';
+import { db, auth } from "@/config/firebase";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
+
+export interface BudgetCourse {
+  id: string;
+  date: string; // "2026-04-14"
+  montant: number;
+  moyenPaiement: "CB" | "Cash" | "Retrait" | "Chèque";
+  createdAt: Date;
+  updatedAt: Date;
+  source?: string;
+}
+
+export const useBudgetCourses = () => {
+  const [courses, setCourses] = useState<BudgetCourse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const coursesRef = collection(db, "users", user.uid, "budgetCourses");
+        const q = query(coursesRef, orderBy("date", "desc"));
+        const snap = await getDocs(q);
+
+        const loadedCourses = snap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate?.() || new Date(),
+          updatedAt: doc.data().updatedAt?.toDate?.() || new Date(),
+        })) as BudgetCourse[];
+
+        setCourses(loadedCourses);
+      } catch (error) {
+        console.error("❌ Erreur fetch courses:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  // Calculer totaux
+  const getTotalsByMonth = (year: number, month: number) => {
+    return courses
+      .filter((c) => {
+        const [y, m] = c.date.split('-');
+        return parseInt(y) === year && parseInt(m) === month;
+      })
+      .reduce((sum, c) => sum + c.montant, 0);
+  };
+
+  const getTotalsByWeek = (startDate: Date) => {
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 6);
+
+    return courses
+      .filter((c) => {
+        const courseDate = new Date(c.date);
+        return courseDate >= startDate && courseDate <= endDate;
+      })
+      .reduce((sum, c) => sum + c.montant, 0);
+  };
+
+  const getTotalByPaymentMethod = () => {
+    return {
+      CB: courses.filter(c => c.moyenPaiement === "CB").reduce((sum, c) => sum + c.montant, 0),
+      Cash: courses.filter(c => c.moyenPaiement === "Cash").reduce((sum, c) => sum + c.montant, 0),
+      Retrait: courses.filter(c => c.moyenPaiement === "Retrait").reduce((sum, c) => sum + c.montant, 0),
+      Chèque: courses.filter(c => c.moyenPaiement === "Chèque").reduce((sum, c) => sum + c.montant, 0),
+    };
+  };
+
+  return {
+    courses,
+    loading,
+    getTotalsByMonth,
+    getTotalsByWeek,
+    getTotalByPaymentMethod,
+  };
+};
+
+═══════════════════════════════════════════════════════════════════════════════
+
+4. AJOUTER LE HOOK AU APP.TSX (ou index)
+
+À la première connexion / app load, appeler la migration :
+
+import { migrateGroceryToBudgetCourses } from "@/utils/migrateGrocery";
+
+// Dans un useEffect du composant principal :
+useEffect(() => {
+  const runMigration = async () => {
+    const result = await migrateGroceryToBudgetCourses();
+    if (result.success && result.migrated > 0) {
+      console.log(`✅ ${result.migrated} dépenses migrées`);
+      // Optional: show toast
+    }
+  };
+  
+  runMigration();
+}, []);
+
+═══════════════════════════════════════════════════════════════════════════════
+CHECKLIST 1/3
+═══════════════════════════════════════════════════════════════════════════════
+
+☐ Collection /budgetCourses/ créée en Firestore
+☐ migrateGrocery.ts créé
+☐ useBudgetCourses.ts créé
+☐ Migration appelée au app load
+☐ Console affiche : "✅ X dépenses migrées" (si Grocery existe dans plage)
+☐ Vérifier Firebase : /users/{uid}/budgetCourses/ contient les dépenses
+☐ Flag groceryMigrationDone = true après migration
+☐ Aucune erreur console
+
+PRÊT ? → PROMPT 2/3

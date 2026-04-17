@@ -1,0 +1,580 @@
+═══════════════════════════════════════════════════════════════════════════════
+🚀 DEBT SNOWBALL — ÉTAPE 2/3 : Pages + Composants
+═══════════════════════════════════════════════════════════════════════════════
+
+OBJECTIF : Créer les pages et composants (Charges modifiée + Budget Courses)
+
+FILES À MODIFIER/CRÉER : 3
+
+═══════════════════════════════════════════════════════════════════════════════
+1. MODIFIER `/src/pages/Charges.tsx`
+═══════════════════════════════════════════════════════════════════════════════
+
+[REMPLACER INTÉGRALEMENT AVEC LE CODE DE CHARGES.TSX DU PROMPT 2/3 PRÉCÉDENT]
+[Les imports, useEffect migration, tableau, etc. - tout reste identique]
+
+═══════════════════════════════════════════════════════════════════════════════
+2. CRÉER `/src/components/ChargesRecap.tsx`
+═══════════════════════════════════════════════════════════════════════════════
+
+[COPIER LE CODE DU RECAP COMPONENT DÉCRIT PRÉCÉDEMMENT]
+
+═══════════════════════════════════════════════════════════════════════════════
+3. CRÉER `/src/pages/BudgetCourses.tsx` (PAGE COMPLÈTE)
+═══════════════════════════════════════════════════════════════════════════════
+
+import React, { useState, useEffect } from 'react';
+import { db, auth } from "@/config/firebase";
+import { 
+  collection, 
+  getDocs, 
+  addDoc, 
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  orderBy
+} from "firebase/firestore";
+import { useBudgetCourses, BudgetCourse } from "@/hooks/useBudgetCourses";
+import { migrateGroceryToBudgetCourses } from "@/utils/migrateGrocery";
+import { useToast } from "@/hooks/useToast";
+
+const BudgetCourses = () => {
+  const [courses, setCourses] = useState<BudgetCourse[]>([]);
+  const [budgetPrevu, setBudgetPrevu] = useState(600);
+  const [budgetLocked, setBudgetLocked] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [currentWeek, setCurrentWeek] = useState(new Date());
+  const [viewMode, setViewMode] = useState<"week" | "month">("week");
+  const [filterPayment, setFilterPayment] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<"recent" | "old">("recent");
+  const [showAddModal, setShowAddModal] = useState(false);
+  
+  // Dépenses à venir
+  const [futureExpenses, setFutureExpenses] = useState<any[]>([]);
+  
+  const { totalDuMois, restant, percentUsed, depassement } = useBudgetCourses(
+    courses,
+    budgetPrevu
+  );
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    const initBudgetCourses = async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // ÉTAPE 1 : Migration Grocery si besoin
+        const migrated = await migrateGroceryToBudgetCourses();
+
+        // ÉTAPE 2 : Charger les Budget Courses
+        const coursesRef = collection(db, "users", user.uid, "budgetCourses");
+        const q = query(coursesRef, orderBy("date", "desc"));
+        const snap = await getDocs(q);
+
+        const loadedCourses = snap.docs.map((doc) => ({
+          id: doc.id,
+          date: doc.data().date?.toDate?.() || new Date(),
+          montant: doc.data().montant,
+          paymentMethod: doc.data().paymentMethod,
+          createdAt: doc.data().createdAt?.toDate?.() || new Date(),
+          updatedAt: doc.data().updatedAt?.toDate?.() || new Date(),
+        })) as BudgetCourse[];
+
+        setCourses(loadedCourses);
+
+        // ÉTAPE 3 : Charger les Budget Courses Settings
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDocs(collection(db, "users", user.uid));
+        const userData = userSnap.docs[0]?.data();
+        if (userData?.budgetCoursesPrevu) {
+          setBudgetPrevu(userData.budgetCoursesPrevu);
+        }
+        if (userData?.budgetCoursesLocked) {
+          setBudgetLocked(userData.budgetCoursesLocked);
+        }
+
+        // ÉTAPE 4 : Charger les Dépenses à venir
+        const futureRef = collection(db, "users", user.uid, "futureExpenses");
+        const futureSnap = await getDocs(futureRef);
+        const loadedFuture = futureSnap.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+          targetDate: d.data().targetDate?.toDate?.() || new Date(),
+        }));
+        setFutureExpenses(loadedFuture);
+
+        if (migrated) {
+          showToast(
+            `✅ ${loadedCourses.length} courses importées de Grocery`,
+            "success"
+          );
+        }
+      } catch (error) {
+        console.error("❌ Erreur init Budget Courses:", error);
+        showToast("❌ Erreur chargement", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initBudgetCourses();
+  }, []);
+
+  const handleAddCourse = async (date: Date, montant: number, paymentMethod: string) => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    try {
+      const coursesRef = collection(db, "users", user.uid, "budgetCourses");
+      const docRef = await addDoc(coursesRef, {
+        date: new Date(date),
+        montant: parseFloat(montant.toFixed(2)),
+        paymentMethod,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const newCourse: BudgetCourse = {
+        id: docRef.id,
+        date: new Date(date),
+        montant: parseFloat(montant.toFixed(2)),
+        paymentMethod: paymentMethod as any,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      setCourses([newCourse, ...courses]);
+      setShowAddModal(false);
+      showToast("✓ Course ajoutée", "success");
+    } catch (error) {
+      console.error("❌ Erreur ajout course:", error);
+      showToast("❌ Erreur", "error");
+    }
+  };
+
+  const handleDeleteCourse = async (courseId: string) => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    try {
+      const courseRef = doc(db, "users", user.uid, "budgetCourses", courseId);
+      await deleteDoc(courseRef);
+      setCourses(courses.filter(c => c.id !== courseId));
+      showToast("✓ Course supprimée", "success");
+    } catch (error) {
+      console.error("❌ Erreur suppression:", error);
+      showToast("❌ Erreur", "error");
+    }
+  };
+
+  // Filtrer et trier
+  const filteredCourses = courses
+    .filter(c => !filterPayment || c.paymentMethod === filterPayment)
+    .sort((a, b) => 
+      sortBy === "recent" 
+        ? b.date.getTime() - a.date.getTime()
+        : a.date.getTime() - b.date.getTime()
+    );
+
+  // Vue semaine
+  const getWeekCourses = () => {
+    const start = new Date(currentWeek);
+    start.setDate(start.getDate() - start.getDay() + 1); // Lundi
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6); // Dimanche
+
+    return filteredCourses.filter(
+      c => c.date >= start && c.date <= end
+    );
+  };
+
+  const weekCourses = getWeekCourses();
+  const weekTotal = weekCourses.reduce((sum, c) => sum + c.montant, 0);
+  const budgetHebdo = budgetPrevu / 4.3; // ~140€/semaine
+
+  if (loading) {
+    return <div className="p-4 text-center">Chargement...</div>;
+  }
+
+  return (
+    <div className="p-4 space-y-6">
+      {/* HEADER + BUDGET */}
+      <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-6 rounded-lg border border-amber-200">
+        <h1 className="text-xl font-bold text-gray-800 mb-4">🛒 Budget Courses</h1>
+        
+        <div className="flex items-center gap-2 mb-4">
+          <input
+            type="number"
+            value={budgetPrevu}
+            onChange={(e) => setBudgetPrevu(parseFloat(e.target.value) || 0)}
+            disabled={budgetLocked}
+            className={`text-2xl font-bold px-2 py-1 rounded ${
+              budgetLocked ? "bg-gray-100 cursor-not-allowed" : "bg-white border"
+            }`}
+          />
+          <span className="text-gray-600">€/mois</span>
+          <button
+            onClick={() => setBudgetLocked(!budgetLocked)}
+            className="text-xl"
+          >
+            {budgetLocked ? "🔒" : "🔓"}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4 mb-4">
+          <div>
+            <p className="text-sm text-gray-600">Dépensé</p>
+            <p className="text-2xl font-bold text-orange-600">{totalDuMois.toFixed(2)}€</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Restant</p>
+            <p className={`text-2xl font-bold ${restant >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {restant.toFixed(2)}€
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Progression</p>
+            <p className="text-sm">{percentUsed.toFixed(0)}%</p>
+            <div className="w-full bg-gray-200 rounded h-2 mt-1">
+              <div
+                className={`h-2 rounded transition-all ${
+                  depassement ? 'bg-red-500' : 'bg-green-500'
+                }`}
+                style={{ width: `${Math.min(percentUsed, 100)}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {depassement && (
+          <div className="p-3 bg-red-100 text-red-700 rounded text-sm">
+            ⚠️ Budget dépassé de {Math.abs(restant).toFixed(2)}€
+          </div>
+        )}
+      </div>
+
+      {/* VUE SEMAINE / MOIS */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setViewMode("week")}
+          className={`px-4 py-2 rounded font-semibold ${
+            viewMode === "week"
+              ? "bg-orange-500 text-white"
+              : "bg-gray-200 text-gray-700"
+          }`}
+        >
+          📅 SEMAINE {currentWeek.getWeek()}
+        </button>
+        <button
+          onClick={() => setViewMode("month")}
+          className={`px-4 py-2 rounded font-semibold ${
+            viewMode === "month"
+              ? "bg-orange-500 text-white"
+              : "bg-gray-200 text-gray-700"
+          }`}
+        >
+          📊 VUE MOIS
+        </button>
+      </div>
+
+      {/* CALENDRIER SEMAINE */}
+      {viewMode === "week" && (
+        <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="flex justify-between items-center mb-4">
+            <button
+              onClick={() => {
+                const newWeek = new Date(currentWeek);
+                newWeek.setDate(newWeek.getDate() - 7);
+                setCurrentWeek(newWeek);
+              }}
+              className="px-3 py-1 bg-gray-200 rounded"
+            >
+              ◄ Précédente
+            </button>
+            <span className="font-bold">
+              Semaine {currentWeek.getWeek()} ({currentWeek.toLocaleDateString()})
+            </span>
+            <button
+              onClick={() => {
+                const newWeek = new Date(currentWeek);
+                newWeek.setDate(newWeek.getDate() + 7);
+                setCurrentWeek(newWeek);
+              }}
+              className="px-3 py-1 bg-gray-200 rounded"
+            >
+              Suivante ►
+            </button>
+          </div>
+
+          {/* JOURS SEMAINE */}
+          <div className="space-y-2">
+            {Array.from({ length: 7 }, (_, i) => {
+              const date = new Date(currentWeek);
+              date.setDate(date.getDate() - date.getDay() + 1 + i);
+              const dayTotal = weekCourses
+                .filter(c => c.date.toDateString() === date.toDateString())
+                .reduce((sum, c) => sum + c.montant, 0);
+              const dayName = ["LUN", "MAR", "MER", "JEU", "VEN", "SAM", "DIM"][i];
+
+              return (
+                <div key={i} className="flex justify-between items-center p-2 border-b">
+                  <span className="font-semibold">
+                    {dayName} {date.getDate()}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-bold text-orange-600">
+                      {dayTotal.toFixed(2)}€
+                    </span>
+                    <div className="w-40 bg-gray-200 rounded h-2">
+                      <div
+                        className="h-2 bg-orange-500 rounded"
+                        style={{ width: `${Math.min((dayTotal / budgetHebdo) * 100, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 p-3 bg-gray-100 rounded font-bold">
+            TOTAL SEMAINE : {weekTotal.toFixed(2)}€ / {budgetHebdo.toFixed(2)}€
+            {weekTotal > budgetHebdo && (
+              <span className="text-red-600"> ⚠️ DÉPASSÉ</span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* FILTRES + TABLEAU LINÉAIRE */}
+      <div className="space-y-3">
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => setFilterPayment(null)}
+            className={`px-3 py-1 rounded text-sm ${
+              !filterPayment ? "bg-orange-500 text-white" : "bg-gray-200"
+            }`}
+          >
+            Tous
+          </button>
+          {["CB", "Cash", "Retrait", "Chèque"].map((method) => (
+            <button
+              key={method}
+              onClick={() => setFilterPayment(method)}
+              className={`px-3 py-1 rounded text-sm ${
+                filterPayment === method ? "bg-orange-500 text-white" : "bg-gray-200"
+              }`}
+            >
+              {method}
+            </button>
+          ))}
+
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="ml-auto px-3 py-1 border rounded"
+          >
+            <option value="recent">📅 Plus récent</option>
+            <option value="old">📅 Plus ancien</option>
+          </select>
+        </div>
+
+        {/* VUE LINÉAIRE */}
+        <div className="bg-white rounded-lg border border-gray-200 space-y-1 max-h-96 overflow-y-auto">
+          {filteredCourses.length === 0 ? (
+            <p className="p-4 text-center text-gray-500">Aucune dépense</p>
+          ) : (
+            filteredCourses.map((course, idx) => (
+              <div
+                key={course.id}
+                className={`p-3 flex justify-between items-center border-b hover:bg-gray-50 cursor-pointer ${
+                  idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                }`}
+                onClick={() => {
+                  // Éditer/supprimer
+                  const action = confirm("Supprimer cette dépense ?");
+                  if (action) handleDeleteCourse(course.id);
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-sm">
+                    {course.date.toLocaleDateString("fr-FR")}
+                  </span>
+                  <span className="font-bold text-orange-600">
+                    {course.montant.toFixed(2)}€
+                  </span>
+                </div>
+                <span className="text-lg">
+                  {course.paymentMethod === "CB" && "💳"}
+                  {course.paymentMethod === "Cash" && "💵"}
+                  {course.paymentMethod === "Retrait" && "🏧"}
+                  {course.paymentMethod === "Chèque" && "✓"}
+                  {course.paymentMethod === "unknown" && "❓"}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* DÉPENSES À VENIR */}
+      <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
+        <h3 className="font-bold text-lg mb-3">🔮 Dépenses à venir</h3>
+        {futureExpenses.length === 0 ? (
+          <p className="text-gray-600 text-sm">Aucune dépense prévue</p>
+        ) : (
+          <div className="space-y-2">
+            {futureExpenses.map((exp) => (
+              <div key={exp.id} className="flex justify-between text-sm p-2 bg-white rounded">
+                <span>{exp.name}</span>
+                <span className="font-bold">{exp.amount.toFixed(2)}€</span>
+                <span>{new Date(exp.targetDate).toLocaleDateString("fr-FR")}</span>
+              </div>
+            ))}
+            <div className="mt-3 p-2 bg-yellow-100 text-yellow-800 rounded text-sm">
+              TOTAL À VENIR : {futureExpenses.reduce((sum, e) => sum + e.amount, 0).toFixed(2)}€
+            </div>
+          </div>
+        )}
+        <button
+          onClick={() => setShowAddModal(!showAddModal)}
+          className="mt-3 w-full px-3 py-2 bg-purple-500 text-white rounded font-semibold"
+        >
+          ➕ Ajouter dépense future
+        </button>
+      </div>
+
+      {/* BOUTON AJOUTER */}
+      <button
+        onClick={() => setShowAddModal(true)}
+        className="w-full px-4 py-3 bg-orange-500 text-white rounded font-semibold"
+      >
+        ➕ AJOUTER DÉPENSE
+      </button>
+
+      {/* MODALE */}
+      {showAddModal && (
+        <AddCourseModal
+          onAdd={handleAddCourse}
+          onClose={() => setShowAddModal(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+const AddCourseModal = ({ onAdd, onClose }: any) => {
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [montant, setMontant] = useState("");
+  const [payment, setPayment] = useState("CB");
+
+  const handleSubmit = () => {
+    if (!montant) return;
+    onAdd(new Date(date), parseFloat(montant), payment);
+    setMontant("");
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-end">
+      <div className="w-full bg-white rounded-t-2xl p-6 space-y-4">
+        <h3 className="text-lg font-bold">➕ AJOUTER DÉPENSE</h3>
+
+        <div>
+          <label className="text-sm font-semibold">📅 Date</label>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-full px-3 py-2 border rounded"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-semibold">💰 Montant</label>
+          <input
+            type="number"
+            placeholder="45.50"
+            value={montant}
+            onChange={(e) => setMontant(e.target.value)}
+            className="w-full px-3 py-2 border rounded"
+            step="0.01"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-semibold">💳 Moyen paiement</label>
+          <div className="flex gap-3">
+            {["CB", "Cash", "Retrait", "Chèque"].map((m) => (
+              <label key={m} className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  value={m}
+                  checked={payment === m}
+                  onChange={(e) => setPayment(e.target.value)}
+                />
+                {m}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={handleSubmit}
+            className="flex-1 px-4 py-2 bg-orange-500 text-white rounded font-semibold"
+          >
+            AJOUTER
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 bg-gray-200 rounded font-semibold"
+          >
+            ANNULER
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Helper function pour obtenir le numéro de semaine
+declare global {
+  interface Date {
+    getWeek(): number;
+  }
+}
+
+Date.prototype.getWeek = function () {
+  const date = new Date(this.getTime());
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + 4 - (date.getDay() || 7));
+  const year = date.getFullYear();
+  const yearStart = new Date(year, 0, 1);
+  const diff = (date.getTime() - yearStart.getTime()) / 86400000;
+  return Math.floor(diff / 7) + 1;
+};
+
+export default BudgetCourses;
+
+═══════════════════════════════════════════════════════════════════════════════
+CHECKLIST 2/3
+═══════════════════════════════════════════════════════════════════════════════
+
+☐ Charges.tsx modifié (intégration migration)
+☐ ChargesRecap.tsx créé et importé dans Charges
+☐ BudgetCourses.tsx créé (page complète)
+☐ Vue semaine fonctionne (calendrier + barre progress)
+☐ Vue mois basculable
+☐ Vue linéaire affiche toutes les transactions
+☐ Filtres (moyen paiement) + tri (date) fonctionnent
+☐ Modale ajouter dépense : Date + Montant + Paiement
+☐ Section "Dépenses à venir" visible
+☐ Budget blocable (icon 🔒)
+☐ Aucune erreur console
+
+PRÊT ? → PROMPT 3/3

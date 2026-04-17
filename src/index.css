@@ -1,0 +1,197 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 20% 97%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 263 70% 50%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 263 70% 96%;
+    --accent-foreground: 263 70% 40%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 210 40% 98%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 221 83% 53%;
+
+    --radius: 0.75rem;
+
+    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+    --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  }
+
+  .dark {
+    /* Claude.ai-inspired deep charcoal palette — no pure black */
+    --background: 215 28% 7%;
+    --foreground: 214 16% 92%;
+
+    --card: 225 28% 14%;
+    --card-foreground: 214 16% 92%;
+
+    --popover: 225 28% 14%;
+    --popover-foreground: 214 16% 92%;
+
+    --primary: 217 93% 68%;
+    --primary-foreground: 215 28% 7%;
+
+    --secondary: 263 70% 68%;
+    --secondary-foreground: 215 28% 7%;
+
+    --muted: 219 23% 20%;
+    --muted-foreground: 218 11% 65%;
+
+    --accent: 263 30% 22%;
+    --accent-foreground: 263 70% 80%;
+
+    --destructive: 0 91% 71%;
+    --destructive-foreground: 215 28% 7%;
+
+    --success: 142 69% 58%;
+    --success-foreground: 215 28% 7%;
+
+    --border: 219 23% 23%;
+    --input: 219 23% 23%;
+    --ring: 217 93% 68%;
+
+    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.35), 0 1px 2px -1px rgb(0 0 0 / 0.25);
+    --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.25);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .dark body,
+  .dark * {
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+}
+
+@layer components {
+  .card-finance {
+    @apply bg-card text-card-foreground rounded-xl p-4 md:p-4 shadow-[var(--shadow-card)] transition-shadow duration-200;
+  }
+
+  .card-finance:hover {
+    @apply shadow-[var(--shadow-card-hover)];
+  }
+
+  .action-glow {
+    animation: actionGlow 0.5s ease-out;
+  }
+
+  .stat-value {
+    @apply text-xl md:text-2xl font-bold text-foreground;
+  }
+
+  .stat-label {
+    @apply text-sm md:text-sm text-muted-foreground;
+  }
+
+  .tab-button {
+    @apply flex-1 py-3.5 px-2 md:px-4 text-sm font-medium text-muted-foreground transition-colors min-h-[48px];
+  }
+
+  .tab-button-active {
+    @apply text-primary border-b-2 border-primary bg-primary/5;
+  }
+
+  .input-inline {
+    @apply bg-transparent border-b border-transparent hover:border-muted-foreground/30 focus:border-primary focus:outline-none transition-colors text-right w-24;
+  }
+
+  .input-touch {
+    @apply min-h-[44px] px-3 py-2.5 rounded-lg bg-muted border-0 focus:ring-2 focus:ring-primary outline-none text-base;
+  }
+
+  .progress-bar {
+    @apply h-2.5 md:h-2 bg-muted rounded-full overflow-hidden;
+  }
+
+  .progress-fill {
+    @apply h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-300;
+  }
+
+  .btn-add {
+    @apply flex items-center gap-2 text-primary hover:bg-primary/10 px-4 py-3 md:py-2 rounded-lg transition-colors text-sm font-medium min-h-[48px];
+  }
+
+  .btn-delete {
+    @apply text-muted-foreground hover:text-destructive transition-colors p-2 min-w-[44px] min-h-[44px] flex items-center justify-center;
+  }
+
+  .btn-touch {
+    @apply min-h-[48px] px-4 py-3 rounded-lg font-medium text-base transition-colors;
+  }
+
+  @keyframes shake {
+
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+
+    20%,
+    60% {
+      transform: translateX(-4px);
+    }
+
+    40%,
+    80% {
+      transform: translateX(4px);
+    }
+  }
+
+  @keyframes actionGlow {
+    0% {
+      box-shadow: 0 0 0 0 rgb(96 165 250 / 0.45);
+    }
+
+    100% {
+      box-shadow: 0 0 0 12px rgb(96 165 250 / 0);
+    }
+  }
+
+  .animate-shake {
+    animation: shake 0.5s ease-in-out;
+  }
+
+  @keyframes shrink-bar {
+    from { transform: scaleX(1); }
+    to   { transform: scaleX(0); }
+  }
+
+  .animate-shrink-bar {
+    animation: shrink-bar linear forwards;
+  }
+}

@@ -1,0 +1,182 @@
+Build Charges tab UI with card layout displaying 7 categories and rubriques:
+
+1. **Create Charges Tab Component**
+   
+   File: src/pages/Charges.tsx (or src/components/ChargesTab.tsx)
+   
+   Component structure:
+   - Import CHARGE_CATEGORIES from constants
+   - Fetch charges data from Firebase: users/{uid}/charges/
+   - Map through 7 categories (in order)
+   - Display each category as card
+   - Display rubriques inside each card
+
+2. **Card Layout Structure**
+   
+   Each category displays as card:
+┌─────────────────────────────────────────┐
+│ 💰 FINANCES                    (2)      │ ← Icon + Name + Count
+│ ─────────────────────────────────────── │
+│ Impôts                                  │ ← Rubrique 1
+│   Prévu: €200    Réel: €200            │
+│   [Edit] [Delete]                      │
+│                                         │
+│ Assurance                               │ ← Rubrique 2
+│   Prévu: €150    Réel: €150            │
+│   [Edit] [Delete]                      │
+│ ─────────────────────────────────────── │
+│ [+ Ajouter rubrique]                   │ ← Add button
+└─────────────────────────────────────────┘
+
+3. **Card Component (Reusable)**
+   
+   Create: src/components/ChargeCard.tsx
+   
+   Props:
+```typescript
+   interface ChargeCardProps {
+     category: {
+       id: string;
+       name: string;
+       icon: string;
+       locked: boolean;
+     };
+     rubriques: Array<{
+       id: string;
+       name: string;
+       prevu: number;
+       reel: number;
+     }>;
+     onAddRubrique: (categoryId: string) => void;
+   }
+```
+   
+   Card displays:
+   - Category header: {icon} {name} ({rubrique count})
+   - List of rubriques (if any)
+   - Each rubrique: name, prévu, réel, [Edit] [Delete]
+   - Footer: [+ Ajouter rubrique] button
+   - Lock icon 🔒 on category name (optional tooltip)
+
+4. **Rubrique Display Format**
+   
+   Each rubrique in card shows:
+Impôts
+Prévu: €200    Réel: €200
+[Edit] [Delete]
+   
+   Styling:
+   - Rubrique name: Bold, 16px
+   - Amounts: Regular, 14px, gray
+   - Buttons: Small, clickable, hover effect
+   - Spacing: 12px between rubriques
+
+5. **Card Container Styling**
+   
+   CSS/Tailwind:
+   - Background: white (or card color)
+   - Border: subtle (0.5px, gray)
+   - Border-radius: 8px (md)
+   - Padding: 20px
+   - Margin-bottom: 16px
+   - Box-shadow: none or subtle
+   - Mobile: Full width (100%)
+   - Desktop: Max-width (if needed)
+
+6. **Rubriques Count**
+   
+   Display count next to category name:
+💰 FINANCES (2)
+   
+   Count = number of rubriques in category
+   - If 0: (0) or hide count
+   - If > 0: show count
+
+7. **Empty State - No Rubriques in Category**
+   
+   If category has 0 rubriques:
+   - Show empty message (optional): "Aucune rubrique"
+   - Still show [+ Ajouter rubrique] button
+   - Card still visible (not hidden)
+
+8. **Global Empty State - No Charges at All**
+   
+   If user has 0 rubriques across ALL 7 categories:
+   
+   Show instead of cards:
+┌─────────────────────────────────┐
+│         📊                      │
+│  Commencez à ajouter vos charges│
+│                                 │
+│ [+ Ajouter une première charge] │
+└─────────────────────────────────┘
+   
+   OR
+   
+   Show all 7 empty cards (user can see structure)
+   Choose: Global empty state OR show all empty cards?
+
+9. **Data Flow**
+   
+   In Charges component:
+```typescript
+   1. Fetch: users/{uid}/charges/ from Firebase
+   2. Loop: CHARGE_CATEGORIES.map()
+   3. For each category: Get rubriques array
+   4. Pass to ChargeCard component
+   5. ChargeCard displays card + rubriques
+   6. User interactions (edit/delete) → PROMPT 3
+```
+   
+   Pseudo-code:
+```typescript
+   const ChargesTab = () => {
+     const [charges, setCharges] = useState({});
+     
+     useEffect(() => {
+       // Fetch charges from Firebase
+       const chargesRef = ref(database, `users/${uid}/charges`);
+       onValue(chargesRef, (snapshot) => {
+         setCharges(snapshot.val() || {});
+       });
+     }, [uid]);
+     
+     return (
+       <div className="charges-tab">
+         {CHARGE_CATEGORIES.map(category => (
+           <ChargeCard
+             key={category.id}
+             category={category}
+             rubriques={charges[category.id]?.rubriques || {}}
+             onAddRubrique={handleAddRubrique}
+           />
+         ))}
+       </div>
+     );
+   };
+```
+
+10. **Mobile Optimization**
+    
+    - Cards: Full width (100%)
+    - Font sizes: 14px min (readable)
+    - Buttons: 48px min height (touch-friendly)
+    - Padding: 16px (mobile friendly)
+    - No horizontal scroll
+    - Rubrique amounts: Stack vertically if needed
+
+11. **Testing & Verification**
+    
+    After implementation:
+    - ✅ All 7 categories visible as cards
+    - ✅ Categories in correct order (1-7)
+    - ✅ Each card shows icon + name + count
+    - ✅ Rubriques display correctly (if any exist)
+    - ✅ [+ Ajouter rubrique] button visible per card
+    - ✅ Empty state shows (if 0 rubriques total)
+    - ✅ Mobile: Cards responsive, readable
+    - ✅ Desktop: Cards layout clean
+    - ✅ No infinite scroll (cards stack vertically)
+    - ✅ Data loads from Firebase correctly
+
+Current status: Create Charges tab with card layout. Display 7 categories as cards. Show rubriques inside cards. Add empty state. Mobile responsive. Test data loading from Firebase.

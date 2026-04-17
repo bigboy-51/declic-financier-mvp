@@ -1,0 +1,62 @@
+Fix major issues in Charges management:
+
+1. **Fix Couple badge (220pts) crash**
+   - The "220" badge in top right (Couple points)
+   - Clicking it makes page blank
+   - Fix the click handler / navigation
+   - Redirect to new Couple page (see task below)
+
+2. **Budget Food Alert ≥ 550€**
+   - Monitor grocery budget REAL-TIME
+   - WHEN user spends ≥ 550€:
+     * Pop-up appears: "⚠️ Budget courses dépasse 550€!"
+     * Grocery budget card turns RED (not blue)
+     * Animated symbol blinks (🚨 or ⚠️)
+     * User can dismiss but warning stays visible
+   - Make it IMPOSSIBLE to miss
+
+3. **Alphabetical ordering**
+   - Sort all main categories A-Z
+   - Sort all sub-categories within each main category
+   - Apply to all lists in Charges tab
+
+4. **Move charges between categories**
+   - Apple (ChatGPT) → move to "Divers"
+   - Cantine → move to "Logement"
+
+5. **Add date+amount tracking for repeatable charges**
+   - Like grocery budget (date + montant)
+   - Add this feature for:
+     * Travaux (in Logement)
+     * Entretien voiture (in Transport)
+     * Loisirs famille (in Loisirs)
+   - User can add multiple entries with dates
+   - Track real vs planned amount
+
+ALSO: Create new "Couple" page for partnership communication:
+
+6. **Encouragements & Celebrations**
+   - Send pre-written messages (templates):
+     * "🎉 Bravo! Tu as respecté le budget!"
+     * "💪 Excellent cette semaine!"
+     * "❤️ Je suis fier(e) de nous"
+     * "👏 Tu gères bien les courses"
+   - Custom message option
+   - Message history between partners
+   - Timestamps
+
+7. **Smart Communication Guide**
+   - Show better ways to communicate about money
+   - Example:
+     * AVOID: "Achète juste ce qu'il faut"
+     * TRY: "Achète ce que tu estimes juste au regard du budget restant"
+   - Real-time budget info: "Restant: 150€, à toi de voir!"
+   - Tips for encouraging communication
+
+8. **Couple Stats**
+   - Combined points/achievements
+   - Shared challenges completed
+   - Monthly progress together
+   - Savings achieved as a team
+
+Current status: Multiple UI/UX issues in Charges. Need new Couple page. Fix all 8 items.

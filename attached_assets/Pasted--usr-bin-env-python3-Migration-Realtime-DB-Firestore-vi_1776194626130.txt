@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+"""
+Migration Realtime DB → Firestore (via Replit)
+"""
+
+import json
+import os
+from datetime import datetime
+
+# STEP 1 : Charger le backup
+print("═══════════════════════════════════════════════════════════════")
+print("🔄 MIGRATION REALTIME DB → FIRESTORE")
+print("═══════════════════════════════════════════════════════════════\n")
+
+try:
+    with open('backup.json', 'r') as f:
+        backup = json.load(f)
+    print("✓ Backup chargé")
+except FileNotFoundError:
+    print("❌ Erreur : backup.json non trouvé")
+    exit(1)
+
+# STEP 2 : Valider structure
+if 'users' not in backup:
+    print("❌ Erreur : pas de 'users' dans backup")
+    exit(1)
+
+users = backup['users']
+print(f"✓ {len(users)} utilisateur(s) trouvé(s)\n")
+
+# STEP 3 : Afficher la structure
+for user_id, user_data in users.items():
+    print(f"Utilisateur : {user_id}")
+    print(f"  Clés principales :")
+    for key in user_data.keys():
+        print(f"    - {key}")
+    print()
+
+# STEP 4 : Afficher les charges et courses
+for user_id, user_data in users.items():
+    print(f"\n📊 Données pour {user_id} :\n")
+    
+    # Charges
+    if 'charges' in user_data:
+        charges = user_data['charges']
+        print(f"  💸 CHARGES ({len(charges)}) :")
+        for i, (charge_id, charge) in enumerate(list(charges.items())[:3]):
+            print(f"     {charge_id}: {charge.get('name', 'N/A')} → {charge.get('montantReel', 0)}€")
+        if len(charges) > 3:
+            print(f"     ... et {len(charges) - 3} autres")
+    
+    # Budget Courses
+    if 'budgetCourses' in user_data:
+        courses = user_data['budgetCourses']
+        print(f"\n  🛒 BUDGET COURSES ({len(courses)}) :")
+        for i, (course_id, course) in enumerate(list(courses.items())[:3]):
+            date = course.get('date', 'N/A')
+            montant = course.get('montant', 0)
+            print(f"     {date}: {montant}€ ({course.get('paymentMethod', 'N/A')})")
+        if len(courses) > 3:
+            print(f"     ... et {len(courses) - 3} autres")
+
+print("\n═══════════════════════════════════════════════════════════════")
+print("✅ VALIDATION RÉUSSIE !")
+print("═══════════════════════════════════════════════════════════════\n")
+
+print("📋 PROCHAINES ÉTAPES :\n")
+print("1. Vérifie que les données ci-dessus sont correctes")
+print("2. Si OK :")
+print("   a. Crée Firestore dans Firebase Console (europe-west1)")
+print("   b. Génère une clé Firebase (Service Account JSON)")
+print("   c. Upload la clé dans Replit (renomme : firebase-key.json)")
+print("   d. Exécute : python migrate-with-firebase.py")
+print("3. Attends la confirmation ✓")
+print("\nVa à : ÉTAPE 4 du document\n")

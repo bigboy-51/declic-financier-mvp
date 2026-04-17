@@ -1,0 +1,59 @@
+Redesign Dashboard layout for clarity and motivation:
+
+1. **Sticky Budget Courses Card (Always Visible)**
+   - Position: Top of dashboard (sticky, doesn't scroll away)
+   - Content:
+     * Title: "BUDGET COURSES"
+     * Week: "Semaine 14-20 avril"
+     * Progress: "610€/700€ [██████░░] 87%"
+     * Status: "Restant: 90€ ✅"
+     * Message: "Vous êtes en bonne voie!"
+     * CTA: [Aller aux courses]
+   - Colors: Green when on track
+   - Mobile: Full width
+
+2. **Quick Wins Section (Below sticky card)**
+   - Title: "CETTE SEMAINE"
+   - Show: ✅ Budget respecté (4/7) | ✅ Salaire reçu (+2,090€) | 🔄 Paiement TRESO en attente
+   - Purpose: Show momentum and frequent wins
+   - Update dynamically
+
+3. **Progression Debt-Free Card**
+   - Title: "🎯 PROGRESSION DEBT-FREE"
+   - Content: "Juillet 2028 (-20 mois)"
+   - Progress bar: 40% COMPLÉTÉ
+   - Celebration message: "Vous avez éliminé €49,936! 🎊"
+   - Detail: "Restant: €74,904 (-€2,300 ce mois)"
+   - Psychology: Focus on PAST wins, not future remaining
+
+4. **Total Debts Card**
+   - Title: "📊 DETTES TOTALES"
+   - Content: -€124,840 | ↘ -€2,300 ce mois
+   - Chart: 24-month line chart showing debt trajectory going DOWN
+   - Message: "Vous êtes en bonne voie! 💪"
+   - Collapsible: [▼ Plus de détails] → shows mini-analytics
+
+5. **Next Action Card (Dynamic)**
+   - Title: "💡 PROCHAINE ACTION"
+   - Content changes based on user state:
+     * IF payment not applied: "Appliquer paiement TRESO - [Appliquer 767€ maintenant]"
+     * IF payment applied: "✅ Paiement appliqué! Prochaine étape: ajouter vos courses"
+     * IF single user: Show different action items (no couple-related)
+   - Purpose: User always knows what to do next
+   - Dynamic, context-aware
+   - NOTE: "Clôture mensuelle" stays in separate section at bottom (not here)
+
+6. **Card Order (Mobile-First)**
+   - Stack vertically on mobile
+   - Budget Courses sticky at top
+   - Rest scroll below
+   - Desktop: Can be 2-column if needed
+
+7. **Psychology & Motivation**
+   - Show PAST achievements, not future remaining
+   - Validate user: "Vous êtes en bonne voie!"
+   - Dynamic "next action" = no confusion
+   - Quick wins visible = momentum
+   - Progress bar = visual satisfaction
+
+Current status: Restructure dashboard with sticky budget card, quick wins, celebration messaging, and dynamic next action. Keep "Clôture mensuelle" separate at bottom.

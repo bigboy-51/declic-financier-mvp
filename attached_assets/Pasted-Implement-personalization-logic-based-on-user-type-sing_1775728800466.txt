@@ -1,0 +1,60 @@
+Implement personalization logic based on user type (single vs couple):
+
+1. **Create helper functions**
+   - Function: getUserType(userId) → returns "single" | "couple"
+   - Function: getPersonalMessage(userType, messageKey) → returns personalized string
+   - Store all message templates in one file (messages.ts or similar)
+   - Example messageKey values: "budget_respected", "quick_wins_title", "motivation_message"
+
+2. **Message templates by user type**
+
+   MESSAGE: budget_respected
+   - Single: "Vous avez respecté votre budget!"
+   - Couple: "Vous avez respecté votre budget ensemble! 🎉"
+
+   MESSAGE: quick_wins_title
+   - Single: "CETTE SEMAINE - Votre progression"
+   - Couple: "CETTE SEMAINE - Votre progression ensemble"
+
+   MESSAGE: budget_label
+   - Single: "Mon budget courses"
+   - Couple: "Notre budget courses"
+
+   MESSAGE: debt_celebration
+   - Single: "Vous avez éliminé 49,936€!"
+   - Couple: "Vous avez éliminé 49,936€ ensemble! 🎊"
+
+   (Add all other dashboard/challenge messages following same pattern)
+
+3. **Apply personalization everywhere in dashboard**
+   - Budget Courses card title: getPersonalMessage(userType, "budget_label")
+   - Quick Wins section title: getPersonalMessage(userType, "quick_wins_title")
+   - Progression message: getPersonalMessage(userType, "debt_celebration")
+   - All challenge language: Adapt to userType
+   - All notifications: Use helper function
+
+4. **Couple Tab personalization**
+   - IF userType === "single":
+     * Tab renamed: "Motivation" (not "Couple")
+     * Content: Personal motivation + achievements
+     * Message: "Vos défis personnels cette semaine"
+     * No couple messaging
+   
+   - IF userType === "couple":
+     * Tab stays: "Couple"
+     * Content: Shared encouragement + couple stats
+     * Message: "Vos défis ensemble cette semaine"
+     * Couple messaging appears
+
+5. **Settings page display**
+   - Show: "Statut: [Célibataire / En couple]"
+   - Style: Read-only display (no edit, no button)
+   - Message below: "Cannot change after initial setup"
+
+6. **Implementation approach (DRY)**
+   - NEVER hardcode personalized text in components
+   - ALWAYS use: getPersonalMessage(userType, key)
+   - All templates in one file = easy to update
+   - One source of truth for all personalization
+
+Current status: Implement personalization helper functions and apply to all dashboard/challenge text based on user type (single vs couple).

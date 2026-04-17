@@ -1,0 +1,99 @@
+═══════════════════════════════════════════════════════════════════════════════
+MIGRATION CHARGES — ÉTAPE 3/3 : Dashboard + Validation
+═══════════════════════════════════════════════════════════════════════════════
+
+OBJECTIF : Ajouter widget Dashboard + validation complète
+
+═══════════════════════════════════════════════════════════════════════════════
+
+AJOUTER LE WIDGET CHARGES AU DASHBOARD :
+
+Dans `/src/components/DashboardHero.tsx` (ou Dashboard principal) :
+
+1. Ajouter imports :
+
+import { useChargesSummary } from "@/hooks/useChargesSummary";
+import { collection, getDocs } from "firebase/firestore";
+import { db, auth } from "@/config/firebase";
+
+2. Dans le composant, ajouter un useEffect pour charger les charges :
+
+const [chargesTotals, setChargesTotals] = useState({
+  totalPrevu: 0,
+  totalReel: 0,
+  totalRestant: 0,
+});
+
+useEffect(() => {
+  const fetchCharges = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const chargesRef = collection(db, "users", user.uid, "charges");
+    const snap = await getDocs(chargesRef);
+    const charges = snap.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    const { totalPrevu, totalReel, totalRestant } = useChargesSummary(charges);
+    setChargesTotals({ totalPrevu, totalReel, totalRestant });
+  };
+
+  fetchCharges();
+}, []);
+
+3. Ajouter ce widget DANS le Dashboard (après autres widgets) :
+
+<div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+  <h4 className="font-bold text-sm mb-3">📊 Charges du mois</h4>
+  <div className="text-sm space-y-2">
+    <div className="flex justify-between">
+      <span className="text-gray-600">Prévu :</span>
+      <span className="font-bold text-blue-600">{chargesTotals.totalPrevu.toFixed(2)}€</span>
+    </div>
+    <div className="flex justify-between">
+      <span className="text-gray-600">Réel :</span>
+      <span className={`font-bold ${chargesTotals.totalReel > chargesTotals.totalPrevu ? 'text-red-600' : 'text-green-600'}`}>
+        {chargesTotals.totalReel.toFixed(2)}€
+      </span>
+    </div>
+    <div className="flex justify-between">
+      <span className="text-gray-600">Restant :</span>
+      <span className={`font-bold ${chargesTotals.totalRestant >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+        {chargesTotals.totalRestant.toFixed(2)}€
+      </span>
+    </div>
+  </div>
+  <a 
+    href="/charges" 
+    className="text-xs text-blue-600 mt-3 block hover:underline font-medium"
+  >
+    Voir détail →
+  </a>
+</div>
+
+═══════════════════════════════════════════════════════════════════════════════
+CHECKLIST FINALE 3/3
+═══════════════════════════════════════════════════════════════════════════════
+
+☐ Widget Dashboard ajouté et visible
+☐ Widget affiche les mêmes chiffres que ChargesRecap (Prévu/Réel/Restant)
+☐ Lien "Voir détail →" fonctionne (redirige vers /charges)
+☐ Console : "✅ Migration réussie : 39 charges"
+☐ Toast : "✅ 39 charges importées du backup"
+☐ Page Charges : 39 lignes EN ORDRE ALPHABÉTIQUE
+☐ Caractéristiques préservées du backup :
+   • EDF : Prévu 151€, Réel 150€ ✓
+   • Cigare : Prévu 40€, Réel 14.5€ ✓
+   • Loisirs famille : Prévu 50€, Réel 68€ (rouge warning) ✓
+☐ Inputs montantRéel se mettent à jour instantanément
+☐ Dashboard se met à jour EN TEMPS RÉEL après changement charge
+☐ Mobile : tout lisible + inputs cliquables
+☐ Aucune erreur console
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ MIGRATION TERMINÉE
+═══════════════════════════════════════════════════════════════════════════════
+
+Screenshot la page Charges + Dashboard → validation complète.

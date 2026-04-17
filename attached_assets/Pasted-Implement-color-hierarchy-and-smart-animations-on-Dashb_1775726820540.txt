@@ -1,0 +1,64 @@
+Implement color hierarchy and smart animations on Dashboard:
+
+1. **Color Hierarchy Strategy**
+   - PRIMARY ACTION (Blue): Budget Courses card, CTA buttons [Aller aux courses]
+     * Color: #60a5fa (soft blue, not neon)
+   - SECONDARY INFO (Gray/Muted): Progress bars, chart backgrounds, labels
+     * Color: #9ca3af (muted gray)
+   - SUCCESS (Green): Checkmarks, "vous êtes en bonne voie", positive indicators
+     * Color: #4ade80 (soft green)
+   - CELEBRATION (Gold): "Vous avez éliminé €49,936!", milestones
+     * Color: #fbbf24 (warm gold, not harsh)
+   - ALERT ONLY (Red): Budget >550€ warning, late payments, errors
+     * Color: #f87171 (soft red, not neon)
+
+2. **Apply colors to Dashboard elements**
+   - Budget Courses card border/accent: Blue (#60a5fa)
+   - Progress bars: Blue when on track, Red when alert
+   - Quick Wins checkmarks: Green (#4ade80)
+   - "Vous avez éliminé" message: Gold (#fbbf24)
+   - CTA buttons: Blue (#60a5fa), hover: slightly darker
+   - Alert messages: Red (#f87171)
+   - Chart lines (debt): Red going down (good), Gold highlights
+
+3. **Smart Animations (Intentional, not decorative)**
+   - Glow animation ONLY when:
+     * User takes action (applies payment, adds expense)
+     * Duration: 0.5s (snappy, not slow)
+     * Effect: Card border/background glows briefly
+     * NOT on page load (feels forced)
+   
+   - Smooth number animations:
+     * When debt decreases: number counts down smoothly
+     * Duration: 500ms (feels responsive)
+     * Used for: Solde updates, debt reduction, budget remaining
+   
+   - Progress bar filling:
+     * When budget updated: bar animates to new value
+     * Duration: 300ms
+   
+   - NO decorative animations:
+     * No confetti (too playful for adults)
+     * No bounces (unprofessional)
+     * No transitions on every element (too busy)
+
+4. **Button Styling with Color Hierarchy**
+   - Primary CTA: Blue background (#60a5fa), white text
+   - Secondary: Gray background (#9ca3af), darker text
+   - Hover states: Slightly darker shade of base color
+   - Disabled: Gray, opacity 0.5
+   - Active: Darker blue, slight shadow
+
+5. **Dark Mode Color Adjustments**
+   - Colors remain same (already soft for dark bg)
+   - Ensure contrast ratio ≥ 7:1 for readability
+
+6. **Alert Color for Budget >550€**
+   - When grocery budget ≥ 550€:
+     * Card background: Light red tint
+     * Border: Red (#f87171)
+     * Icon: 🚨 (alert symbol, blinking animation subtle)
+     * Message: "⚠️ Budget courses dépasse 550€!"
+     * Duration: Animation repeats until acknowledged
+
+Current status: Implement color hierarchy (blue for action, gold for wins, red for alerts) and smart animations (glow on action, smooth number updates). No decorative animations.

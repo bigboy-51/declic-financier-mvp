@@ -1,0 +1,112 @@
+Implement progressive onboarding with 4 setup steps (feature unlock):
+
+1. **STEP 1: Initial Balance**
+   - Question: "Quel est votre solde actuel?"
+   - Input: Amount (starting balance)
+   - Result: ✅ Dashboard unlocked
+   - Message: "Bravo! Vous pouvez maintenant voir votre situation"
+   - Duration: 30 sec
+
+2. **STEP 2: Debts/Credits**
+   - Question: "Avez-vous des dettes ou crédits?"
+   - For each debt user adds:
+     * Name: "Crédit immobilier"
+     * Monthly payment: "849€"
+     * Remaining balance: "80,840€"
+   - Result: ✅ Credits tab unlocked
+   - Message: "Bravo! Suivez votre progression vers la liberté"
+   - Duration: 2-3 min
+
+3. **STEP 3: Charges (Expenses) - ORDERED CATEGORIES**
+   - Pre-existing categories (in this order):
+     * 💰 Finances
+     * 🏠 Logement
+     * 🎉 Loisirs
+     * 🚗 Transport
+     * 👨‍⚕️ Santé
+     * 🔄 Remboursements
+     * 🔀 Divers
+   - User can add custom subcategories per category
+   - For each expense:
+     * Name: "Loyer", "Internet", "Netflix", etc
+     * Budgeted (Prévu): Expected amount
+     * Actual (Réel): Actual spent
+   - Result: ✅ Charges tab + Budget tracker unlocked
+   - Message: "Bravo! Identifiez où va votre argent"
+   - Duration: 2-3 min
+
+4. **STEP 4: Savings Goals (NEW TAB)**
+   - Tab name: "💾 Épargne"
+   - Three savings categories:
+     * Court terme (0-6 months)
+     * Moyen terme (6-18 months)
+     * Long terme (18+ months)
+   - For each goal user adds:
+     * Name: "Fonds d'urgence"
+     * Target amount: "€1000"
+     * Current saved: "€450"
+     * Timeline: User selects timeframe
+     * Progress bar: Visual % toward goal
+   - Each goal card:
+     * Collapsible (shows/hides details)
+     * Progress bar color:
+       └ Red: 0-25% (early stage)
+       └ Orange: 26-75% (mid progress)
+       └ Green: 76-100% (near goal)
+     * Icon per category (💰, 🏖️, 🏠, etc)
+     * Celebrate when goal reached: "🎉 Objectif atteint!"
+   - Result: ✅ Savings tab unlocked
+   - Message: "Bravo! Définissez vos objectifs d'épargne"
+   - Duration: 2-3 min
+
+5. **STEP 5: Couple Mode (Optional)**
+   - If user selected "En couple" at signup:
+     * Offer to invite partner: "Inviter votre partenaire"
+     * Result: ✅ Couple tab unlocked
+     * Message: "Bravo! Travaillez ensemble"
+   - If single: Skip this step
+
+6. **Navigation Flow**
+   - Steps appear sequentially after login
+   - User completes: Step 1 → Step 2 → Step 3 → Step 4 → (Step 5 if couple)
+   - Each step unlock flows naturally
+   - User can skip steps but feature remains locked until completed
+
+7. **Mobile Optimization**
+   - Responsive forms (full screen on mobile)
+   - Large input fields (48px minimum)
+   - Large tap targets (48px minimum)
+   - No horizontal scroll
+   - Readable text sizes (16px+)
+   - Progress bars full width on mobile
+   - Forms stack vertically
+
+8. **Testing & Verification for Steps 1-4**
+   
+   Test STEP 1:
+   - Initial balance input works
+   - Dashboard appears after completion
+   - Message displays correctly
+   
+   Test STEP 2:
+   - User can add multiple debts
+   - Monthly payment calculates correctly
+   - Remaining balance tracks correctly
+   - Credits tab unlocks
+   
+   Test STEP 3 (Charges):
+   - Categories appear in correct order
+   - User can add custom subcategories
+   - User can enter Prévu + Réel amounts
+   - Charges tab unlocks after completion
+   - Category organization is clear
+   
+   Test STEP 4 (Savings):
+   - Savings tab appears with 3 sections (Court/Moyen/Long)
+   - User can add goals in each section
+   - Progress bars calculate correctly (current/target)
+   - Savings tab unlocks after at least 1 goal added
+   - Color coding works (red/orange/green)
+   - Goal celebration triggers at 100%
+
+Current status: Implement progressive onboarding with 4 setup steps. Each step unlocks a feature. Step 3 has ordered categories. Step 4 has 3 timeframe savings goals with progress tracking. Mobile-optimized.

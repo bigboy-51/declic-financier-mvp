@@ -1,0 +1,81 @@
+Rewrite all 5 quiz questions for Déclic Financier (honest, clear French, no jargon, balanced logic):
+
+OPENING QUOTE (unchanged):
+✨ "Connais-toi toi-même" ✨
+Découvrez votre profil avec Déclic Financier
+5 questions rapides (3-5 minutes)
+
+---
+
+1. **Q1: "Avec Déclic Financier, je veux principalement..."**
+   - "Dépenser mon argent sans culpabilité"
+   - "Sécuriser mon avenir financier"
+   - "Libérer du cash pour saisir les opportunités qui se présentent"
+   - "Comprendre clairement ma situation financière"
+   - "Progresser sereinement vers mes objectifs financiers"
+
+2. **Q2: "Déclic m'aiderait le plus à..."**
+   - "Sortir du flux tendu et respirer enfin"
+   - "Épargner progressivement"
+   - "Stabiliser mes finances et savoir où j'en suis"
+   - "Enfin passer à l'action au lieu de planifier"
+   - "Avancer pas à pas vers plus de stabilité"
+
+3. **Q3: "Avec mon argent, je suis plutôt..."**
+   - "Quelqu'un qui vit le moment présent"
+   - "Quelqu'un qui a besoin de sécurité absolue"
+   - "Quelqu'un qui aime calculer les risques"
+   - "Quelqu'un qui réfléchit longtemps avant d'agir"
+   - "Quelqu'un avec une vision claire et disciplinée"
+
+4. **Q4: "Mes priorités financières sont..."**
+   - "Économiser sans me priver"
+   - "Constituer un fonds d'urgence (500-1000€)"
+   - "Rembourser mes dettes"
+   - "Avoir une vision claire de mes dépenses"
+   - "Construire progressivement mon avenir"
+
+5. **Q5: "Pour avancer financièrement, j'ai besoin de..."**
+   - "Célébrer mes petites victoires"
+   - "Voir mon épargne augmenter chaque mois"
+   - "Me fixer des défis et avancer"
+   - "Suivre clairement ma progression"
+   - "Comprendre précisément où en sont mes finances"
+
+---
+
+PROFILE MAPPING:
+- Index 0 majority → "Le Plaisancier"
+- Index 1 majority → "L'Économe"
+- Index 2 majority → "Le Chercheur"
+- Index 3 majority → "Le Penseur"
+- Index 4 majority → "Le Stratège"
+
+RESULTS PAGE:
+- Show profile name + short description
+- Gold quote: ✨ "Connais-toi toi-même" ✨
+- Button: [Accéder à l'app]
+
+FRENCH STANDARDS:
+- Niveau lycée (clair, direct, pas jargon)
+- Grammaire impeccable
+- Ponctuation correcte
+- Aucune faute d'orthographe
+- Naturel à la lecture
+
+HONESTY CHECK:
+- Zéro promesse de conseil financier
+- Zéro jargon investing/FIRE/trading
+- Exemples chiffrés concrets (500-1000€)
+- Focus: outils et clarté, pas guidance
+- Pas d'arcade/gamification lourde
+
+LOGIC CHECK:
+- Q1 = Motivation (que veux-tu?)
+- Q2 = Bénéfices (comment Déclic aide?)
+- Q3 = Style personnel (qui es-tu?)
+- Q4 = Priorités (quoi concrètement?)
+- Q5 = Besoin moteur (comment tu avances?)
+- (5 angles différents, pas redondant)
+
+Current status: Implement all 5 quiz questions with perfect French, honest positioning, clear logic, no jargon, concrete examples. Balance action/awareness. Serious tone.

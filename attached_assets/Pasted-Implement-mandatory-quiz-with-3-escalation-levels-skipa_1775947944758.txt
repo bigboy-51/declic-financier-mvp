@@ -1,0 +1,196 @@
+Implement mandatory quiz with 3 escalation levels (skipable):
+
+1. **Quiz Timing**
+   - Appears AFTER all setup steps completed (STEP 1-5)
+   - Appears once per user (first login after onboarding)
+   - Can be retaken anytime from Settings
+
+2. **ESCALATION 1: Soft Introduction (First Appearance)**
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Modal (non-blocking, dismissible):
+   
+   Title: "✨ Presque là!"
+   
+   Body text:
+   "Vous avez fourni vos données financières.
+   Maintenant, comprenez VOTRE style pour:
+   • Recevoir des défis adaptés
+   • Progresser plus vite
+   • Atteindre vos objectifs"
+   
+   Duration badge: "⏱️ 2 minutes"
+   
+   Buttons:
+   - [Faire le quiz maintenant] (primary, blue)
+   - [Plus tard] (secondary, gray)
+   
+   Behavior if user clicks [Plus tard]:
+   - Modal dismisses
+   - Quiz state saved: "escalation_1_skipped"
+   - Reminder appears in Settings: "Complétez votre profil"
+   - Reminder banner shows every login (non-intrusive)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3. **ESCALATION 2: Feature Lock + Counter (Next Login or 24h)**
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Feature lock card visible on Dashboard:
+   
+   Card design:
+   - Icon: 🔒
+   - Title: "Dashboard personnalisé"
+   - Subtitle: "Déverrouillez avec votre profil financier"
+   
+   Benefits listed:
+   "• Défis spécifiques à votre style
+   • Conseils adaptés
+   • Progression personnelle"
+   
+   Buttons:
+   - [Faire le quiz] (primary, blue)
+   - [Skip for now] (secondary, gray)
+   
+   Counter display: "⏳ 2 skips remaining"
+   
+   Behavior if user clicks [Skip for now]:
+   - Counter updates: skip_count = 2
+   - Counter display changes: "1 skip remaining"
+   - Card stays locked on dashboard
+   - Quiz state saved: "escalation_2_skipped"
+   
+   Behavior if user clicks [Faire le quiz]:
+   - Go to QUIZ CONTENT (see below)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+4. **ESCALATION 3: Hard Consequence + Persistent Banner (After 3rd Skip)**
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Hard consequence modal (stronger visual/tone):
+   
+   Title: "⚠️ Se connaître = clé du succès"
+   
+   Body text:
+   "Vous avez décidé de sauter votre profil 3 fois.
+   
+   Résultat:
+   ❌ Défis = génériques (pas adaptés à vous)
+   ❌ Dashboard = pas personnalisé
+   ❌ Conseils = standard pour tous
+   ❌ Stratégie = generic, pas ciblée
+   
+   Voulez-vous vraiment continuer sans connaître votre style?"
+   
+   Buttons:
+   - [Oui, continuer] (secondary, gray)
+   - [Faire le quiz maintenant] (primary, blue)
+   
+   Behavior if user clicks [Oui, continuer]:
+   - Modal dismisses
+   - App continues normally
+   - BUT: Persistent banner appears on Dashboard:
+     "🎯 Débloquez votre personnalisation [Faire le quiz]"
+   - Banner appears on EVERY login
+   - User can dismiss per session only (returns next login)
+   - Locked card stays locked: "🔒 Dashboard personnalisé"
+   - Quiz state saved: "escalation_3_continued_without_quiz"
+   
+   Behavior if user clicks [Faire le quiz maintenant]:
+   - Go to QUIZ CONTENT (see below)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5. **Quiz Content (5 Questions)**
+   
+   Opening screen:
+   - Title: "Découvrez votre profil financier"
+   - Subtitle: "5 questions rapides (2 minutes)"
+   - [Commencer] button
+   
+   Questions (5 total):
+   Q1: "Avec Déclic Financier, je veux principalement..."
+   - Dépenser/utiliser mon argent sans culpabilité
+   - Sécuriser mon avenir financier
+   - Libérer du cash pour saisir les opportunités
+   - Comprendre clairement ma situation financière
+   - Progresser sereinement vers mes objectifs financiers
+   
+   Q2: "Déclic m'aiderait le plus à..."
+   - Sortir du flux tendu et respirer enfin
+   - Épargner progressivement
+   - Stabiliser mes finances et savoir où j'en suis
+   - Enfin passer à l'action au lieu de planifier
+   - Avancer pas à pas vers plus de stabilité
+   
+   Q3: "Avec mon argent, je suis plutôt..."
+   - Quelqu'un qui vit le moment présent
+   - Quelqu'un qui a besoin de sécurité absolue
+   - Quelqu'un qui aime calculer les risques
+   - Quelqu'un qui réfléchit longtemps avant d'agir
+   - Quelqu'un avec une vision claire et disciplinée
+   
+   Q4: "Mes priorités financières sont..."
+   - Économiser sans me priver
+   - Constituer un fonds d'urgence (500-1000€)
+   - Rembourser mes dettes
+   - Avoir une vision claire de mes dépenses
+   - Construire progressivement mon avenir
+   
+   Q5: "Pour avancer, j'ai besoin de..."
+   - Célébrer mes petites victoires
+   - Voir mon épargne augmenter chaque mois
+   - Me fixer des défis et avancer
+   - Suivre clairement ma progression
+   - Comprendre précisément où en sont mes finances
+   
+   Progress indicator: Show "Question X of 5" as user advances
+
+6. **Quiz Results Page**
+   
+   Display:
+   - Profile name: "🎯 Le Stratège"
+   - Profile description: "Vous avez une vision long terme"
+   - Gold quote: "✨ Connais-toi toi-même ✨"
+   - Success message: "Bravo! Vous avez déverrouillé personnalisation"
+   - Button: [Retour au dashboard]
+   
+   After quiz completion:
+   ✅ Locked card unlocks: "Dashboard personnalisé"
+   ✅ Persistent banner disappears from dashboard
+   ✅ Dashboard shows profile-specific content
+   ✅ Profile badge added to user Settings
+   ✅ Quiz state saved: "quiz_completed"
+
+7. **Mobile Optimization**
+   - Full screen modals on mobile
+   - Large tap targets (48px minimum)
+   - Question text readable (16px+)
+   - Answer buttons full width
+   - Progress bar visible throughout quiz
+
+8. **Testing & Verification for Escalations**
+   
+   Test ESCALATION 1:
+   - Quiz modal appears after steps complete
+   - User can dismiss with [Plus tard]
+   - Reminder appears in Settings
+   - Skip counter initialized to 3
+   
+   Test ESCALATION 2:
+   - On next login: Feature lock card visible
+   - Counter displays correctly: "2 skips remaining"
+   - User can skip again
+   - Skip counter decrements
+   
+   Test ESCALATION 3:
+   - After 3rd skip: Hard consequence modal appears
+   - If [Oui, continuer]: Persistent banner appears on dashboard
+   - Banner shows on every login
+   - User can dismiss per session (returns next login)
+   - Locked card remains locked
+   
+   Test Quiz Flow:
+   - 5 questions load in correct order
+   - User answers map to profile indices
+   - Results page shows correct profile
+   - After completion: Locked card unlocks
+   - Persistent banner disappears
+   - Profile shows in Settings
+
+Current status: Implement quiz with 3 escalation levels. Escalation 1 (soft modal), Escalation 2 (feature lock + counter), Escalation 3 (hard consequence + persistent banner). Quiz content with 5 questions. Results page unlocks personalized dashboard.

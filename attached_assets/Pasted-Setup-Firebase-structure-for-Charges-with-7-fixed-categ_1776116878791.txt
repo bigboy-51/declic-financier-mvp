@@ -1,0 +1,148 @@
+Setup Firebase structure for Charges with 7 fixed categories:
+
+1. **Define Fixed Categories Array**
+   
+   Create constant file: src/constants/chargeCategories.ts
+   
+```typescript
+   export const CHARGE_CATEGORIES = [
+     { id: 'finances', name: 'Finances', icon: '💰', order: 1 },
+     { id: 'logement', name: 'Logement', icon: '🏠', order: 2 },
+     { id: 'loisirs', name: 'Loisirs', icon: '🎉', order: 3 },
+     { id: 'transport', name: 'Transport', icon: '🚗', order: 4 },
+     { id: 'sante', name: 'Santé', icon: '👨‍⚕️', order: 5 },
+     { id: 'remboursements', name: 'Remboursements', icon: '🔄', order: 6 },
+     { id: 'divers', name: 'Divers', icon: '🔀', order: 7 }
+   ];
+```
+
+2. **Firebase Data Structure**
+   
+   Charges stored at:
+   users/{uid}/charges/
+   
+   Structure:
+users/{uid}/charges/
+├── {categoryId}/
+│   ├── name: string (e.g., "Finances")
+│   ├── icon: string (e.g., "💰")
+│   ├── order: number (1-7)
+│   ├── locked: boolean (true - cannot edit/delete)
+│   ├── createdAt: timestamp
+│   └── rubriques/
+│       └── {rubriqueId}/
+│           ├── name: string
+│           ├── prevu: number
+│           ├── reel: number
+│           ├── createdAt: timestamp
+│           └── updatedAt: timestamp
+   
+   Example:
+users/{uid}/charges/finances/
+├── name: "Finances"
+├── icon: "💰"
+├── locked: true
+└── rubriques/
+└── impot-001/
+├── name: "Impôts"
+├── prevu: 200
+├── reel: 200
+
+3. **Initialize Categories on First Login**
+   
+   In FirebaseDataContext.tsx (or AuthContext.tsx):
+   
+   On successful login:
+   - Check: users/{uid}/charges/ exists?
+   - If NO (new user):
+     * Create all 7 categories automatically
+     * Initialize each category with: name, icon, order, locked: true
+     * Initialize rubriques: [] (empty)
+   - If YES (returning user):
+     * Skip initialization (already exists)
+   
+   Function to create:
+```typescript
+   async function initializeChargesForNewUser(uid: string) {
+     const chargesRef = ref(database, `users/${uid}/charges`);
+     const chargesSnapshot = await get(chargesRef);
+     
+     if (!chargesSnapshot.exists()) {
+       // New user: Create all 7 categories
+       for (const category of CHARGE_CATEGORIES) {
+         await set(ref(database, `users/${uid}/charges/${category.id}`), {
+           name: category.name,
+           icon: category.icon,
+           order: category.order,
+           locked: true,
+           createdAt: new Date().toISOString()
+         });
+       }
+     }
+   }
+```
+   
+   Call this function:
+   - After user login successful
+   - Pass currentUser.uid
+
+4. **Lock Categories (Read-Only)**
+   
+   Add property: locked: true on all categories
+   
+   In UI later (PROMPT 2):
+   - Read locked property
+   - Disable edit/delete buttons for categories
+   - Show 🔒 icon (optional)
+
+5. **Firebase Security Rules**
+   
+   Update rules to protect categories:
+   
+```json
+   {
+     "rules": {
+       "users": {
+         "$uid": {
+           ".read": "auth.uid === $uid",
+           ".write": "auth.uid === $uid",
+           "charges": {
+             "$categoryId": {
+               ".write": "!data.child('locked').val()" 
+             }
+           }
+         }
+       }
+     }
+   }
+```
+   
+   This prevents deletion of locked categories (backend validation)
+
+6. **Test Initialization**
+   
+   New user login test:
+   - Create new account: testuser@example.com
+   - Clear browser storage completely
+   - Login
+   - Check Firebase Console:
+     * users/{testuid}/charges/ exists? ✅
+     * All 7 categories created? ✅
+     * Each category has: name, icon, order, locked: true ✅
+     * rubriques: [] (empty) ✅
+   
+   Returning user test:
+   - Login existing account
+   - Check Firebase Console:
+     * categories NOT duplicated ✅
+     * data unchanged ✅
+
+7. **Verify Data Structure**
+   
+   Firebase Console → Realtime Database:
+   - Navigate: users/{anyuid}/charges/
+   - Should see: finances, logement, loisirs, transport, sante, remboursements, divers
+   - Each category has 4 properties: name, icon, order, locked
+   - No rubriques yet (will be added in PROMPT 2-3)
+
+Current status: Create CHARGE_CATEGORIES constant. Initialize 7 fixed categories on new user login. Add locked: true property. Update Firebase rules. Test initialization for new and returning users.

@@ -1,0 +1,159 @@
+Fix critical startup error and review changes from past 24 hours:
+
+1. **Critical Bug: "Cannot access 'Ir' before initialization"**
+   
+   Error location: index-CYJVA7-x.js:3184
+   
+   Actions:
+   - Clean rebuild: Delete node_modules/.vite
+   - Clear Vite cache: Delete .vite directory
+   - Rebuild: npm run build
+   - Test locally before deploy
+   - Clear browser cache (Ctrl+Shift+Del)
+
+2. **Review Changes from Past 24 Hours**
+   
+   Check recent commits/changes:
+   - Login/Auth flow updates
+   - Onboarding UI (STEP 1-4) implementation
+   - Quiz escalation modals (3 levels)
+   - Profile selection modal (couple mode)
+   - currentProfile localStorage logic
+   - Any new imports or dependencies
+   
+   Identify potential circular imports:
+   - Auth context imports
+   - Firebase config imports
+   - Hook imports (useFinanceData, useRewards, etc)
+   - Component imports
+   
+   Check for:
+   - Missing exports
+   - Duplicate definitions
+   - Out-of-order imports
+
+3. **Likely Culprits - Recent Changes**
+   
+   Most likely causes from onboarding prompts:
+   
+   A) Profile Selection Modal (new in PROMPT 4A-1)
+   - Check: Profile selection component created?
+   - Check: Modal imported correctly?
+   - Check: No circular import with Auth context?
+   
+   B) localStorage currentProfile (new in PROMPT 4A-1)
+   - Check: localStorage utility file
+   - Check: currentProfile getter/setter
+   - Check: No circular dependencies?
+   
+   C) Quiz Escalation Logic (new in PROMPT 4A-3)
+   - Check: Quiz escalation component
+   - Check: Modal components (Escalation 1, 2, 3)
+   - Check: quizEscalation path in Firebase queries
+   
+   D) Firebase queries updated (PROMPT 4-REVISED not posted yet)
+   - Check: All queries include [currentProfile]
+   - Check: Import paths correct
+   - Check: No missing user/{uid} prefix
+
+4. **Step-by-Step Debugging**
+   
+   Step 1: Check Build Output
+   - Run: npm run build
+   - Look for warnings about: circular imports, unused variables
+   - Note any errors or warnings
+   
+   Step 2: Check Recent Component Additions
+   - List all NEW files created in past 24h
+   - Check each for circular imports
+   - Verify all exports are correct
+   
+   Step 3: Check Import Order
+   - In Index.tsx (main entry point):
+     * Ensure Firebase config imported FIRST
+     * Ensure Auth context imported SECOND
+     * Ensure other components after
+   
+   Step 4: Verify No Hoisting Issues
+   - Search codebase: "const Ir" or "let Ir" or "var Ir"
+   - Find where 'Ir' is defined
+   - Ensure it's defined before ANY use
+
+5. **Files to Check**
+   
+   Critical files from past 24h changes:
+   - src/pages/Index.tsx (main entry)
+   - src/context/AuthContext.tsx (auth)
+   - src/components/[New Components] (onboarding)
+   - src/hooks/useFinanceData.js (finance data)
+   - src/config/firebase.js (Firebase config)
+   - vite.config.js (build config)
+
+6. **Specific Checks for Onboarding Changes**
+   
+   If ProfileSelectionModal created:
+   - Check: Export is correct
+   - Check: No circular import with AuthContext
+   - Check: currentProfile localStorage access works
+   
+   If QuizEscalationModal created:
+   - Check: Three modal components separate or combined?
+   - Check: Escalation level logic correct
+   - Check: Firebase quizEscalation path correct
+   
+   If currentProfile utility created:
+   - Check: No circular import with localStorage
+   - Check: Getter/setter functions work
+   - Check: No race conditions
+
+7. **Fix Circular Imports (If Found)**
+   
+   Common circular import patterns:
+   
+   PROBLEM:
+   AuthContext.js imports ProfileSelectionModal
+   ProfileSelectionModal imports AuthContext
+   
+   SOLUTION:
+   Move shared logic to separate utility file
+   - authUtils.js (no component imports)
+   - profileUtils.js (no component imports)
+   - Each file imports utilities, not components
+   
+   OR use lazy loading:
+   const ProfileSelectionModal = lazy(() => import('...'));
+
+8. **Build & Deploy**
+   
+   After fixes applied:
+   - npm run build (should complete clean)
+   - Verify: No warnings in build output
+   - Verify: .dist or .build folder created
+   - Deploy to Replit
+   - Test: App loads without error
+   - Test: Login flow works
+   - Test: Profile selection appears (couple mode)
+   - Test: No console errors
+
+9. **Testing After Fix**
+   
+   Test scenarios:
+   - Fresh login: Should not error
+   - Couple mode login: Profile selection appears
+   - Single mode login: Skip profile selection
+   - Onboarding: STEP 1-4 load correctly
+   - Quiz: Escalation modals appear
+   - Firefox + Chrome (different browsers)
+   - Mobile + Desktop (different sizes)
+   - Clear cache between tests
+
+10. **Fallback - If Error Persists**
+    
+    If error still occurs after above steps:
+    - Check Replit logs: tail -f .replit-logs
+    - Run with verbose: npm run build --verbose
+    - Check for TypeScript errors: npx tsc --noEmit
+    - Look for ESLint warnings: npm run lint
+    - Last resort: Revert last 3 commits, rebuild incrementally
+
+Current status: Fix "Cannot access 'Ir' before initialization" error. Review all changes from past 24 hours (onboarding prompts). Identify circular imports. Clean rebuild. Test thoroughly before confirming fix.

@@ -1,0 +1,52 @@
+Implement a comprehensive challenge system with points and badges for daily, weekly, and monthly goals:
+
+1. **Challenge Data Structure**
+   - Create a challenges object with three categories: daily, weekly, monthly
+   - Each challenge has: id, name, description, points, completed (boolean), progress (%)
+
+2. **Daily Challenges (Reset at midnight)**
+   - "Journée sobre" - No unplanned expenses (10 pts)
+   - "Budget courses respecté" - Stay within 700€ (15 pts)
+   - "Check-in financier" - Open app once (5 pts)
+   - "Salaire reçu" - Mark salary as received (20 pts)
+
+3. **Weekly Challenges (Mon-Sun)**
+   - "🔥 Streak de 7 jours" - Stay on budget all week (50 pts)
+   - "📈 Tréso positive" - Balance > 0€ all week (40 pts)
+   - "💳 Paiement à temps" - Apply credit payment (30 pts)
+   - "🏃 Actif" - Open app 5+ days (25 pts)
+
+4. **Monthly Challenges**
+   - "🎉 Mois accompli" - Close month (100 pts)
+   - "📉 Dettes diminuent" - Debt < last month (75 pts)
+   - "💚 Budget parfait" - 0€ overspend (60 pts)
+   - "🚀 Surplus maximisé" - Apply surplus to credits (50 pts)
+
+5. **Badge System**
+   - 🥉 Bronze: 100-250 pts
+   - 🥈 Silver: 251-500 pts
+   - 🥇 Gold: 501-1000 pts
+   - 💎 Platinum: 1001+ pts
+   - 👑 Legend: Debt-Free + all challenges
+
+6. **UI - New "Challenges" Tab**
+   - Show current streak (🔥 X days)
+   - Show total points (⭐ X pts)
+   - Display daily challenges with checkboxes
+   - Display weekly progress bars (X/7 days)
+   - Display monthly progress
+   - Add confetti animation when 3+ daily challenges completed
+
+7. **Auto-Tracking**
+   - Automatically check challenges based on app actions:
+     * Mark salary → check "Salaire reçu"
+     * Open app → check "Check-in financier"
+     * Apply payment → check "Paiement à temps"
+     * Close month → check "Mois accompli"
+
+8. **Notifications**
+   - 9am: "Bonjour! Relevé ton challenge du jour 🎯"
+   - 8pm: "Plus que 4h pour ta journée sobre 🔥"
+   - When challenge completed: Toast "Défi complété! +X pts 🎉"
+
+Current status: App has rewards but no structured challenge system. Please implement daily, weekly, and monthly challenges with auto-tracking and visual progress.

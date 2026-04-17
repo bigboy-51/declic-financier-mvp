@@ -1,0 +1,178 @@
+Implement onboarding state tracking with step completion logic:
+
+1. **Check Onboarding Completion Status**
+   
+   After profile selection (from PROMPT 4A-1):
+   - Get currentUser.uid
+   - Query Firebase: users/{uid}/onboarding/completed
+   
+   If completed = true:
+   - Financial setup already done
+   - Skip STEP 1-4
+   - Proceed to PROMPT 4A-3 (Quiz check)
+   
+   If completed = false:
+   - Financial setup NOT done
+   - Show STEP 1 (Initial Balance)
+   - User proceeds through STEP 1-4
+
+2. **Firebase Structure - Onboarding State**
+   
+   users/{uid}/onboarding/
+   ├── completed: true/false (SHARED - financial setup done once)
+   ├── step1_completed: true/false
+   ├── step2_completed: true/false
+   ├── step3_completed: true/false
+   ├── step4_completed: true/false
+   ├── step5_completed: true/false (couple only)
+   └── lastUpdated: ISO timestamp
+
+3. **Step Completion Logic**
+   
+   STEP 1 (Initial Balance):
+   - On completion: Save solde to Firebase
+   - Mark: users/{uid}/onboarding/step1_completed = true
+   - Proceed to STEP 2
+   
+   STEP 2 (Debts):
+   - On completion (add at least 1 debt): Mark step2_completed = true
+   - Proceed to STEP 3
+   
+   STEP 3 (Charges):
+   - On completion (add at least 1 expense): Mark step3_completed = true
+   - Proceed to STEP 4
+   
+   STEP 4 (Savings):
+   - On completion (add at least 1 goal): Mark step4_completed = true
+   - If single user: All done, set onboarding/completed = true
+   - If couple user: Proceed to STEP 5
+   
+   STEP 5 (Couple Mode - Invite Partner):
+   - Only if userType = "couple"
+   - On completion (invite sent or skipped): Mark step5_completed = true
+   - Set onboarding/completed = true
+
+4. **Step Skipping Logic - Returning Users**
+   
+   When onboarding/completed = true:
+   - STEP 1-4 are SKIPPED (already done)
+   - Show them as: [✅ Solde ajouté] or [✅ Complété]
+   - Visual: Grayed out or collapsed
+   - User cannot re-do (or can re-edit in Settings)
+   - Skip directly to: PROMPT 4A-3 (Quiz check)
+
+5. **Single User Flow**
+   
+   FIRST LOGIN (New account):
+   Login → userType selection → single
+   → Check onboarding/completed = false
+   → STEP 1 [Initial Balance]
+   → STEP 2 [Debts]
+   → STEP 3 [Charges]
+   → STEP 4 [Savings]
+   → All steps done → onboarding/completed = true
+   → Proceed to PROMPT 4A-3
+   
+   SECOND LOGIN+ (Returning):
+   Login → Check onboarding/completed = true
+   → SKIP all steps (show as completed)
+   → Proceed to PROMPT 4A-3
+
+6. **Couple User Flow**
+   
+   FIRST LOGIN (Boss - New account):
+   Login → Profile selection → boss_profile
+   → Check onboarding/completed = false
+   → STEP 1 [Initial Balance]
+   → STEP 2 [Debts]
+   → STEP 3 [Charges]
+   → STEP 4 [Savings]
+   → STEP 5 [Invite Wife / Create Code]
+   → All steps done → onboarding/completed = true
+   → Proceed to PROMPT 4A-3
+   
+   SECOND LOGIN (Wife - Same account, first login on this device):
+   Login → Profile selection → wife_profile
+   → Check onboarding/completed = true ✅
+   → ALL STEPS SKIPPED (already done by boss)
+   → Show: [✅ Solde ajouté] [✅ Dettes remplies] etc
+   → Proceed to PROMPT 4A-3
+   
+   THIRD LOGIN (Boss - Returning, different device):
+   Login → Profile selection → boss_profile
+   → Check onboarding/completed = true ✅
+   → ALL STEPS SKIPPED
+   → Proceed to PROMPT 4A-3
+
+7. **Resume Incomplete Onboarding**
+   
+   If user abandons onboarding mid-way:
+   - Example: Completes STEP 1 & 2, quits at STEP 3
+   - Next login: Check onboarding/completed = false
+   - Check step3_completed = false
+   - Show STEP 3 (resume from where they left)
+   - Resume logic: Find first incomplete step, show that one
+
+8. **UI/UX for Completed Steps**
+   
+   COMPLETED STEP (shown in sequence):
+   ✅ Solde ajouté: €1500
+   [Modifier] button (optional - to edit in Settings)
+   
+   or
+   
+   COMPLETED STEP (collapsed):
+   ▼ Solde [✅ Complété]
+   Click to expand and see details
+   
+   Implementation: Up to design choice
+
+9. **Mobile Optimization**
+   
+   - Sequential step display
+   - Full width on mobile
+   - Clear progress indicator
+   - Large tap targets for buttons (48px+)
+   - Readable text (16px+)
+
+10. **Testing & Verification**
+    
+    Test NEW SINGLE USER:
+    - Login first time
+    - Check: onboarding/completed = false
+    - Check: All step[N]_completed = false
+    - Show: STEP 1
+    - Complete STEP 1: step1_completed = true
+    - Show: STEP 2
+    - Complete STEP 2-4
+    - Check: onboarding/completed = true
+    
+    Test RETURNING SINGLE USER:
+    - Login second time
+    - Check: onboarding/completed = true
+    - SKIP all steps
+    - Proceed to quiz check
+    
+    Test NEW COUPLE USER (Boss):
+    - Login first time
+    - Profile selection: boss_profile
+    - Check: onboarding/completed = false
+    - Show: STEP 1-5
+    - Complete all steps
+    - Check: onboarding/completed = true
+    
+    Test NEW COUPLE USER (Wife):
+    - Login same account, first on this device
+    - Profile selection: wife_profile
+    - Check: onboarding/completed = true ✅
+    - SKIP all steps (show as completed)
+    - Proceed to quiz check
+    
+    Test Resume Incomplete:
+    - Complete STEP 1-2, quit at STEP 3
+    - Next login: Check step3_completed = false
+    - Show: STEP 3 (resume point)
+    - Complete STEP 3
+    - Continue to STEP 4
+
+Current status: Implement onboarding state tracking. Check completion status on login. Skip completed steps for returning users. Resume incomplete onboarding. Support single and couple flows. Mark step completion in Firebase.

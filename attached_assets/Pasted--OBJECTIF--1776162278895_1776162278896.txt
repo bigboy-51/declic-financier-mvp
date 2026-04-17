@@ -1,0 +1,332 @@
+═══════════════════════════════════════════════════════════════════════════════
+OBJECTIF
+═══════════════════════════════════════════════════════════════════════════════
+
+Intégrer les 34 catégories de charges dans Debt Snowball.
+Chaque charge : Prévu (montantDefaut) / Réel (éditable) / Restant (calculé).
+Ordre ALPHABÉTIQUE.
+Recap Prévu/Réel/Restant EN HAUT de Charges + SYNCHRONISÉ sur Dashboard.
+
+═══════════════════════════════════════════════════════════════════════════════
+1. DONNÉES : 34 CATÉGORIES (ORDRE ALPHABÉTIQUE)
+═══════════════════════════════════════════════════════════════════════════════
+
+Créer `/src/data/chargesData.ts` :
+
+export const chargesData = [
+  { name: "Aide maman", montantPrevu: 30 },
+  { name: "Apple (ChatGPT)", montantPrevu: 22.99 },
+  { name: "Ass Hab C.Ep", montantPrevu: 30 },
+  { name: "Assurance vie", montantPrevu: 30 },
+  { name: "Assurance voiture", montantPrevu: 56 },
+  { name: "C+", montantPrevu: 21.99 },
+  { name: "Cadeau", montantPrevu: 20 },
+  { name: "Cantine", montantPrevu: 50 },
+  { name: "Chat", montantPrevu: 40 },
+  { name: "Charge de copro", montantPrevu: 65 },
+  { name: "Cigare", montantPrevu: 40 },
+  { name: "Coiffeur", montantPrevu: 40 },
+  { name: "Cotisation C.Ep", montantPrevu: 12 },
+  { name: "Cotisation bancaire", montantPrevu: 16 },
+  { name: "EDF", montantPrevu: 151 },
+  { name: "Eau", montantPrevu: 22 },
+  { name: "Entretien voiture", montantPrevu: 30 },
+  { name: "Essence", montantPrevu: 200 },
+  { name: "Foncier", montantPrevu: 105 },
+  { name: "Free Mobile", montantPrevu: 92 },
+  { name: "Freebox", montantPrevu: 39 },
+  { name: "GEOZ", montantPrevu: 28 },
+  { name: "Impôt prélèvement", montantPrevu: 8 },
+  { name: "Loisirs famille", montantPrevu: 50 },
+  { name: "MGP", montantPrevu: 28.32 },
+  { name: "Mutuelle JP", montantPrevu: 27 },
+  { name: "Noël", montantPrevu: 40 },
+  { name: "OBleu", montantPrevu: 28 },
+  { name: "Pharmacie fixe", montantPrevu: 35 },
+  { name: "Prévoyance Min", montantPrevu: 52 },
+  { name: "TRAM (TransDev)", montantPrevu: 17 },
+  { name: "Veolia", montantPrevu: 60 },
+];
+
+═══════════════════════════════════════════════════════════════════════════════
+2. STRUCTURE FIRESTORE
+═══════════════════════════════════════════════════════════════════════════════
+
+/users/{uid}/charges/{chargeId}
+├── name: string
+├── montantPrevu: number
+├── montantReel: number (default: 0)
+├── montantRestant: number (calculé : montantPrevu - montantReel)
+├── createdAt: timestamp
+└── updatedAt: timestamp
+
+[À la première connexion : injecter les 34 catégories]
+
+═══════════════════════════════════════════════════════════════════════════════
+3. HOOK : CALCULER TOTAUX
+═══════════════════════════════════════════════════════════════════════════════
+
+Créer `/src/hooks/useChargesSummary.ts` :
+
+export const useChargesSummary = (charges: Charge[]) => {
+  const totalPrevu = charges.reduce((sum, c) => sum + c.montantPrevu, 0);
+  const totalReel = charges.reduce((sum, c) => sum + c.montantReel, 0);
+  const totalRestant = totalPrevu - totalReel;
+  
+  return {
+    totalPrevu: parseFloat(totalPrevu.toFixed(2)),
+    totalReel: parseFloat(totalReel.toFixed(2)),
+    totalRestant: parseFloat(totalRestant.toFixed(2)),
+  };
+};
+
+═══════════════════════════════════════════════════════════════════════════════
+4. COMPOSANT : RECAP (HAUT DE LA PAGE CHARGES)
+═══════════════════════════════════════════════════════════════════════════════
+
+Créer `/src/components/ChargesRecap.tsx` :
+
+interface ChargesRecapProps {
+  totalPrevu: number;
+  totalReel: number;
+  totalRestant: number;
+}
+
+export const ChargesRecap: React.FC<ChargesRecapProps> = ({
+  totalPrevu,
+  totalReel,
+  totalRestant,
+}) => {
+  const percentUsed = totalPrevu > 0 ? (totalReel / totalPrevu) * 100 : 0;
+  
+  return (
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg mb-6 border border-blue-200">
+      <h2 className="text-lg font-bold text-gray-800 mb-4">📊 Synthèse Charges</h2>
+      
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <p className="text-sm text-gray-600">Prévu</p>
+          <p className="text-2xl font-bold text-blue-600">{totalPrevu.toFixed(2)}€</p>
+        </div>
+        
+        <div>
+          <p className="text-sm text-gray-600">Réel</p>
+          <p className={`text-2xl font-bold ${totalReel > totalPrevu ? 'text-red-600' : 'text-green-600'}`}>
+            {totalReel.toFixed(2)}€
+          </p>
+          <p className="text-xs text-gray-500 mt-1">{percentUsed.toFixed(0)}% utilisé</p>
+        </div>
+        
+        <div>
+          <p className="text-sm text-gray-600">Restant</p>
+          <p className={`text-2xl font-bold ${totalRestant >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {totalRestant.toFixed(2)}€
+          </p>
+        </div>
+      </div>
+      
+      {totalReel > totalPrevu && (
+        <div className="mt-4 p-3 bg-red-100 text-red-700 rounded text-sm">
+          ⚠️ Budget dépassé de {Math.abs(totalRestant).toFixed(2)}€
+        </div>
+      )}
+    </div>
+  );
+};
+
+═══════════════════════════════════════════════════════════════════════════════
+5. PAGE CHARGES : INTÉGRATION
+═══════════════════════════════════════════════════════════════════════════════
+
+Modifier le composant Charges.tsx :
+
+import { chargesData } from "@/data/chargesData";
+import { useChargesSummary } from "@/hooks/useChargesSummary";
+import { ChargesRecap } from "@/components/ChargesRecap";
+
+const Charges = () => {
+  const [charges, setCharges] = useState<Charge[]>([]);
+  
+  // Récupérer les charges depuis Firebase au mount
+  useEffect(() => {
+    const fetchCharges = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+      
+      const chargesRef = collection(db, "users", user.uid, "charges");
+      const snap = await getDocs(chargesRef);
+      
+      if (snap.empty) {
+        // PREMIÈRE CONNEXION : injecter les 34 catégories
+        const promises = chargesData.map((charge) =>
+          addDoc(chargesRef, {
+            ...charge,
+            montantReel: 0,
+            montantRestant: charge.montantPrevu,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })
+        );
+        await Promise.all(promises);
+        
+        const newSnap = await getDocs(chargesRef);
+        setCharges(newSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      } else {
+        setCharges(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      }
+    };
+    
+    fetchCharges();
+  }, []);
+  
+  // Calculer les totaux
+  const { totalPrevu, totalReel, totalRestant } = useChargesSummary(charges);
+  
+  // Trier alphabétiquement
+  const sortedCharges = [...charges].sort((a, b) => a.name.localeCompare(b.name));
+  
+  // Modifier une charge
+  const handleUpdateCharge = async (chargeId: string, montantReel: number) => {
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    const chargeRef = doc(db, "users", user.uid, "charges", chargeId);
+    const montantRestant = sortedCharges.find(c => c.id === chargeId)?.montantPrevu - montantReel;
+    
+    await updateDoc(chargeRef, {
+      montantReel,
+      montantRestant,
+      updatedAt: new Date(),
+    });
+    
+    // Mettre à jour l'état local
+    setCharges(charges.map(c =>
+      c.id === chargeId
+        ? { ...c, montantReel, montantRestant: montantRestant || 0 }
+        : c
+    ));
+    
+    showToast("✓ Charge mise à jour", "success");
+  };
+  
+  return (
+    <div className="p-4">
+      <ChargesRecap
+        totalPrevu={totalPrevu}
+        totalReel={totalReel}
+        totalRestant={totalRestant}
+      />
+      
+      <div className="bg-white rounded-lg border border-gray-200">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b bg-gray-50">
+              <th className="text-left p-3 font-semibold">Catégorie</th>
+              <th className="text-right p-3 font-semibold">Prévu</th>
+              <th className="text-right p-3 font-semibold">Réel</th>
+              <th className="text-right p-3 font-semibold">Restant</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedCharges.map((charge) => (
+              <tr key={charge.id} className="border-b hover:bg-gray-50">
+                <td className="p-3">{charge.name}</td>
+                <td className="text-right p-3 text-blue-600 font-semibold">
+                  {charge.montantPrevu.toFixed(2)}€
+                </td>
+                <td className="text-right p-3">
+                  <input
+                    type="number"
+                    value={charge.montantReel}
+                    onChange={(e) =>
+                      handleUpdateCharge(charge.id, parseFloat(e.target.value) || 0)
+                    }
+                    className="w-24 px-2 py-1 border rounded text-right"
+                    step="0.01"
+                  />
+                </td>
+                <td
+                  className={`text-right p-3 font-semibold ${
+                    charge.montantRestant >= 0 ? 'text-green-600' : 'text-red-600'
+                  }`}
+                >
+                  {charge.montantRestant.toFixed(2)}€
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export default Charges;
+
+═══════════════════════════════════════════════════════════════════════════════
+6. DASHBOARD : WIDGET SYNCHRONISÉ
+═══════════════════════════════════════════════════════════════════════════════
+
+Ajouter au Dashboard (ex: DashboardHero ou widget dédié) :
+
+<div className="bg-white p-4 rounded-lg border border-gray-200">
+  <h4 className="font-bold text-sm mb-3">📊 Charges du mois</h4>
+  <div className="text-sm space-y-2">
+    <div className="flex justify-between">
+      <span>Prévu :</span>
+      <span className="font-bold text-blue-600">{totalPrevu.toFixed(2)}€</span>
+    </div>
+    <div className="flex justify-between">
+      <span>Réel :</span>
+      <span className={`font-bold ${totalReel > totalPrevu ? 'text-red-600' : 'text-green-600'}`}>
+        {totalReel.toFixed(2)}€
+      </span>
+    </div>
+    <div className="flex justify-between">
+      <span>Restant :</span>
+      <span className={`font-bold ${totalRestant >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+        {totalRestant.toFixed(2)}€
+      </span>
+    </div>
+  </div>
+  <a href="/charges" className="text-xs text-blue-600 mt-3 block hover:underline">
+    Voir détail →
+  </a>
+</div>
+
+[Le widget se met à jour EN TEMPS RÉEL via le même useChargesSummary]
+
+═══════════════════════════════════════════════════════════════════════════════
+7. BONUS : AJOUTER UNE CATÉGORIE (OPTIONNEL)
+═══════════════════════════════════════════════════════════════════════════════
+
+Un simple bouton "➕ Ajouter une charge" sur la page Charges.
+Modale ou form simple pour : nom + montantPrevu.
+La charge est créée en Firestore et apparaît IMMÉDIATEMENT dans la liste (tri alphabétique).
+
+═══════════════════════════════════════════════════════════════════════════════
+8. CHECKLIST DE VALIDATION
+═══════════════════════════════════════════════════════════════════════════════
+
+☐ chargesData.ts créé avec 34 catégories EN ORDRE ALPHABÉTIQUE
+☐ À la première connexion : les 34 catégories sont injectées en Firestore
+☐ Page Charges affiche ChargesRecap EN HAUT (Prévu/Réel/Restant totaux)
+☐ Tableau des charges avec 4 colonnes : Catégorie | Prévu | Réel (input) | Restant (calculé)
+☐ Les charges sont triées ALPHABÉTIQUEMENT
+☐ Modifier le champ Réel → recalcule Restant immédiatement
+☐ Sauvegarder en Firestore + toast "✓ Charge mise à jour"
+☐ Dashboard affiche les MÊMES totaux (Prévu/Réel/Restant)
+☐ Modification dans Charges → Dashboard se met à jour EN TEMPS RÉEL
+☐ Si montantReel > montantPrevu : afficher en ROUGE + warning
+☐ Test mobile : inputs lisibles, recap visible
+☐ Aucune erreur console
+
+═══════════════════════════════════════════════════════════════════════════════
+NOTES IMPORTANTES
+═══════════════════════════════════════════════════════════════════════════════
+
+- "Restant" = CALCULÉ AUTOMATIQUEMENT, jamais éditable
+- Pas de suppression de catégories pour ce sprint
+- Les 34 catégories sont VERROUILLÉES après injection (pas de modification du nom)
+- Modifications du montantRéel SEULEMENT
+- Firestore listeners = mise à jour en temps réel (Dashboard + Charges)

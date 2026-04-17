@@ -1,0 +1,239 @@
+═══════════════════════════════════════════════════════════════════════════════
+🚀 DEBT SNOWBALL — ÉTAPE 1/3 : Fichiers + Hooks + Migrations
+═══════════════════════════════════════════════════════════════════════════════
+
+OBJECTIF : Créer tous les fichiers fondateurs (ne pas modifier Charges.tsx)
+
+FILES À CRÉER : 5
+
+═══════════════════════════════════════════════════════════════════════════════
+1. `/src/data/chargesMigrated.ts` (39 charges)
+═══════════════════════════════════════════════════════════════════════════════
+
+[COPIER LE CONTENU DEPUIS chargesMigrated.ts déjà fourni]
+[Link : /mnt/user-data/outputs/chargesMigrated.ts]
+
+═══════════════════════════════════════════════════════════════════════════════
+2. `/src/hooks/useChargesSummary.ts` (Recap Charges)
+═══════════════════════════════════════════════════════════════════════════════
+
+export interface Charge {
+  id: string;
+  name: string;
+  montantPrevu: number;
+  montantReel: number;
+  montantRestant: number;
+  custom?: boolean;
+}
+
+export const useChargesSummary = (charges: Charge[]) => {
+  const totalPrevu = charges.reduce((sum, c) => sum + c.montantPrevu, 0);
+  const totalReel = charges.reduce((sum, c) => sum + c.montantReel, 0);
+  const totalRestant = totalPrevu - totalReel;
+  
+  return {
+    totalPrevu: parseFloat(totalPrevu.toFixed(2)),
+    totalReel: parseFloat(totalReel.toFixed(2)),
+    totalRestant: parseFloat(totalRestant.toFixed(2)),
+  };
+};
+
+═══════════════════════════════════════════════════════════════════════════════
+3. `/src/hooks/useBudgetCourses.ts` (Recap Budget Courses)
+═══════════════════════════════════════════════════════════════════════════════
+
+export interface BudgetCourse {
+  id: string;
+  date: Date;
+  montant: number;
+  paymentMethod: "CB" | "Cash" | "Retrait" | "Chèque";
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface BudgetCourseSummary {
+  totalDuMois: number;
+  budgetPrevu: number;
+  restant: number;
+  percentUsed: number;
+  depassement: boolean;
+}
+
+export const useBudgetCourses = (
+  courses: BudgetCourse[],
+  budgetPrevu: number
+): BudgetCourseSummary => {
+  const totalDuMois = courses.reduce((sum, c) => sum + c.montant, 0);
+  const restant = budgetPrevu - totalDuMois;
+  const percentUsed = budgetPrevu > 0 ? (totalDuMois / budgetPrevu) * 100 : 0;
+
+  return {
+    totalDuMois: parseFloat(totalDuMois.toFixed(2)),
+    budgetPrevu,
+    restant: parseFloat(restant.toFixed(2)),
+    percentUsed: parseFloat(percentUsed.toFixed(1)),
+    depassement: totalDuMois > budgetPrevu,
+  };
+};
+
+═══════════════════════════════════════════════════════════════════════════════
+4. `/src/utils/migrateCharges.ts` (Injection 39 charges)
+═══════════════════════════════════════════════════════════════════════════════
+
+import { db, auth } from "@/config/firebase";
+import { 
+  collection, 
+  getDocs, 
+  addDoc, 
+  deleteDoc,
+  doc,
+  setDoc,
+  getDoc
+} from "firebase/firestore";
+import { chargesMigratedData } from "@/data/chargesMigrated";
+
+export const migrateChargesToFirebase = async () => {
+  const user = auth.currentUser;
+  if (!user) {
+    console.log("❌ No user logged in");
+    return false;
+  }
+
+  try {
+    const userRef = doc(db, "users", user.uid);
+    const chargesRef = collection(db, "users", user.uid, "charges");
+
+    // VÉRIFIER SI MIGRATION DÉJÀ FAITE
+    const userDoc = await getDoc(userRef);
+    const migrationDone = userDoc.data()?.migrationDone || false;
+
+    if (migrationDone) {
+      console.log("✅ Migration charges déjà effectuée");
+      return false;
+    }
+
+    console.log(`📊 Migration charges en cours...`);
+
+    // SUPPRIMER LES ANCIENNES CHARGES
+    const existingCharges = await getDocs(chargesRef);
+    console.log("🗑️ Nettoyage des anciennes charges...");
+    const deletePromises = existingCharges.docs.map((doc) =>
+      deleteDoc(doc.ref)
+    );
+    await Promise.all(deletePromises);
+
+    // AJOUTER LES 39 NOUVELLES CHARGES
+    console.log(`➕ Injection de ${chargesMigratedData.length} charges...`);
+    const addPromises = chargesMigratedData.map((charge: any) =>
+      addDoc(chargesRef, {
+        name: charge.name,
+        montantPrevu: parseFloat(charge.montantPrevu.toFixed(2)),
+        montantReel: parseFloat(charge.montantReel.toFixed(2)),
+        montantRestant: parseFloat(charge.montantRestant.toFixed(2)),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        custom: charge.custom || false,
+      })
+    );
+
+    await Promise.all(addPromises);
+
+    // MARQUER MIGRATION COMME FAITE
+    await setDoc(userRef, { migrationDone: true }, { merge: true });
+
+    console.log(`✅ Migration charges réussie : ${chargesMigratedData.length} charges`);
+    return true;
+  } catch (error) {
+    console.error("❌ Erreur migration charges:", error);
+    return false;
+  }
+};
+
+═══════════════════════════════════════════════════════════════════════════════
+5. `/src/utils/migrateGrocery.ts` (Migration Grocery → Budget Courses)
+═══════════════════════════════════════════════════════════════════════════════
+
+import { db, auth } from "@/config/firebase";
+import { 
+  collection, 
+  getDocs, 
+  addDoc, 
+  deleteDoc,
+  doc,
+  setDoc,
+  getDoc
+} from "firebase/firestore";
+
+const isInMigrationRange = (date: Date): boolean => {
+  const startDate = new Date("2026-03-25");
+  const endDate = new Date("2026-04-12");
+  return date >= startDate && date <= endDate;
+};
+
+export const migrateGroceryToBudgetCourses = async () => {
+  const user = auth.currentUser;
+  if (!user) return false;
+
+  try {
+    const userRef = doc(db, "users", user.uid);
+    const groceryRef = collection(db, "users", user.uid, "groceries");
+    const budgetCoursesRef = collection(db, "users", user.uid, "budgetCourses");
+
+    // VÉRIFIER SI DÉJÀ MIGRÉ
+    const userDoc = await getDoc(userRef);
+    const groceryMigrated = userDoc.data()?.groceryMigrated || false;
+
+    if (groceryMigrated) {
+      console.log("✅ Grocery déjà migré");
+      return false;
+    }
+
+    // RÉCUPÉRER TOUTES LES GROCERIES
+    const snap = await getDocs(groceryRef);
+    console.log(`📊 Migration Grocery en cours (${snap.docs.length} items)...`);
+
+    let migratedCount = 0;
+
+    // POUR CHAQUE GROCERY DANS LA PLAGE DE DATE
+    for (const doc of snap.docs) {
+      const grocery = doc.data();
+      const createdAt = grocery.createdAt?.toDate?.() || new Date();
+
+      if (isInMigrationRange(createdAt)) {
+        // AJOUTER EN BUDGET COURSES
+        await addDoc(budgetCoursesRef, {
+          date: createdAt,
+          montant: parseFloat((grocery.amount || 0).toFixed(2)),
+          paymentMethod: "unknown", // Fallback (Grocery n'avait pas ce champ)
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+
+        migratedCount++;
+      }
+    }
+
+    // MARQUER COMME MIGRÉ
+    await setDoc(userRef, { groceryMigrated: true }, { merge: true });
+
+    console.log(`✅ Grocery migré : ${migratedCount} items vers Budget Courses`);
+    return true;
+  } catch (error) {
+    console.error("❌ Erreur migration Grocery:", error);
+    return false;
+  }
+};
+
+═══════════════════════════════════════════════════════════════════════════════
+CHECKLIST 1/3
+═══════════════════════════════════════════════════════════════════════════════
+
+☐ chargesMigrated.ts créé (39 charges)
+☐ useChargesSummary.ts créé
+☐ useBudgetCourses.ts créé
+☐ migrateCharges.ts créé (flag migrationDone)
+☐ migrateGrocery.ts créé (flag groceryMigrated)
+☐ Aucune erreur d'import/TypeScript
+☐ Console : pas de warnings
+
+PRÊT ? → PROMPT 2/3

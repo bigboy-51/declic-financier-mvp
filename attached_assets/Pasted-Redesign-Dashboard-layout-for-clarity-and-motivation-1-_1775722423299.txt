@@ -1,0 +1,57 @@
+Redesign Dashboard layout for clarity and motivation:
+
+1. **Large Sticky Budget Courses Card (Always Visible)**
+   - Position: Top of dashboard (TRULY STICKY - stays visible when scrolling)
+   - Content:
+     * Title: "💰 BUDGET COURSES"
+     * Week: "Semaine 14-20 avril"
+     * Progress: "610€/700€ [██████░░] 87%"
+     * Status: "Restant: 90€ ✅"
+     * Message: "Vous êtes en bonne voie!"
+     * CTA Button: [Aller aux courses]
+   - Colors: Green when on track
+   - Height: ~120px (LARGER, easy to see)
+   - Padding: Generous spacing
+   - Mobile: Full width, tap-friendly
+   - CSS: position: sticky; top: 0; z-index: high (ensure it stays on top)
+
+2. **Quick Wins Section (Below sticky card)**
+   - Title: "CETTE SEMAINE"
+   - Show ONLY wins (no "Charges en cours"):
+     * ✅ Salaire JP reçu (+2,090€)
+     * ✅ Salaire Nadia reçu (+2,700€)
+     * ✅ Paiement crédits appliqué (2,329€)
+   - Update dynamically
+
+3. **Progression Debt-Free Card**
+   - Title: "🎯 PROGRESSION DEBT-FREE"
+   - Content: "Juillet 2028 (-20 mois)"
+   - Progress bar: 40% COMPLÉTÉ
+   - Message: "Vous avez éliminé €49,936! 🎊"
+   - Detail: "Restant: €74,904 (-€2,300 ce mois)"
+
+4. **Total Debts Card**
+   - Title: "📊 DETTES TOTALES"
+   - Content: -€124,840 | ↘ -€2,300 ce mois
+   - Chart: 24-month line chart
+   - Message: "Vous êtes en bonne voie! 💪"
+
+5. **Next Action Card (Dynamic)**
+   - Title: "💡 PROCHAINE ACTION"
+   - Content changes based on state:
+     * IF payment not applied: "Appliquer paiement TRESO - [Appliquer 767€ maintenant]"
+     * IF payment applied: "✅ Paiement appliqué! Prochaine étape: ajouter vos courses"
+
+6. **REMOVE: "Clôture mensuelle" section at bottom**
+   - DELETE: "Clôture mensuelle - avril 2026" card
+   - DELETE: "Clôturer le mois va sauvegarder..." explanation
+   - Reason: Duplicate with "Prochaine action" - confusing UX
+   - Keep only ONE place for monthly closure (in "Prochaine action" when relevant)
+
+7. **Card Order (Mobile-First)**
+   - Sticky Budget Courses at top (ALWAYS VISIBLE)
+   - Quick Wins below
+   - Progression, Debts, Next Action below
+   - Stack vertically on mobile
+
+Current status: Make Budget Courses card LARGER and TRULY STICKY. Remove "Clôture mensuelle" section (duplicate). Clean up dashboard.

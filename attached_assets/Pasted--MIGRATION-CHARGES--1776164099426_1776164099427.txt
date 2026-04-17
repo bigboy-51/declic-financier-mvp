@@ -1,0 +1,173 @@
+═══════════════════════════════════════════════════════════════════════════════
+MIGRATION CHARGES — ÉTAPE 1/3 : Fondations
+═══════════════════════════════════════════════════════════════════════════════
+
+OBJECTIF : Créer les fichiers/hooks nécessaires (ne pas modifier Charges.tsx encore)
+
+FILES À CRÉER :
+1. /src/hooks/useChargesSummary.ts
+2. /src/components/ChargesRecap.tsx
+3. /src/utils/migrateCharges.ts
+
+═══════════════════════════════════════════════════════════════════════════════
+
+1. CRÉER `/src/hooks/useChargesSummary.ts` :
+
+export interface Charge {
+  id: string;
+  name: string;
+  montantPrevu: number;
+  montantReel: number;
+  montantRestant: number;
+  custom?: boolean;
+}
+
+export const useChargesSummary = (charges: Charge[]) => {
+  const totalPrevu = charges.reduce((sum, c) => sum + c.montantPrevu, 0);
+  const totalReel = charges.reduce((sum, c) => sum + c.montantReel, 0);
+  const totalRestant = totalPrevu - totalReel;
+  
+  return {
+    totalPrevu: parseFloat(totalPrevu.toFixed(2)),
+    totalReel: parseFloat(totalReel.toFixed(2)),
+    totalRestant: parseFloat(totalRestant.toFixed(2)),
+  };
+};
+
+═══════════════════════════════════════════════════════════════════════════════
+
+2. CRÉER `/src/components/ChargesRecap.tsx` :
+
+import React from 'react';
+
+interface ChargesRecapProps {
+  totalPrevu: number;
+  totalReel: number;
+  totalRestant: number;
+}
+
+export const ChargesRecap: React.FC<ChargesRecapProps> = ({
+  totalPrevu,
+  totalReel,
+  totalRestant,
+}) => {
+  const percentUsed = totalPrevu > 0 ? (totalReel / totalPrevu) * 100 : 0;
+  
+  return (
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg mb-6 border border-blue-200">
+      <h2 className="text-lg font-bold text-gray-800 mb-4">📊 Synthèse Charges</h2>
+      
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <p className="text-sm text-gray-600">Prévu</p>
+          <p className="text-2xl font-bold text-blue-600">{totalPrevu.toFixed(2)}€</p>
+        </div>
+        
+        <div>
+          <p className="text-sm text-gray-600">Réel</p>
+          <p className={`text-2xl font-bold ${totalReel > totalPrevu ? 'text-red-600' : 'text-green-600'}`}>
+            {totalReel.toFixed(2)}€
+          </p>
+          <p className="text-xs text-gray-500 mt-1">{percentUsed.toFixed(0)}% utilisé</p>
+        </div>
+        
+        <div>
+          <p className="text-sm text-gray-600">Restant</p>
+          <p className={`text-2xl font-bold ${totalRestant >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {totalRestant.toFixed(2)}€
+          </p>
+        </div>
+      </div>
+      
+      {totalReel > totalPrevu && (
+        <div className="mt-4 p-3 bg-red-100 text-red-700 rounded text-sm">
+          ⚠️ Budget dépassé de {Math.abs(totalRestant).toFixed(2)}€
+        </div>
+      )}
+    </div>
+  );
+};
+
+═══════════════════════════════════════════════════════════════════════════════
+
+3. CRÉER `/src/utils/migrateCharges.ts` :
+
+import { db, auth } from "@/config/firebase";
+import { 
+  collection, 
+  getDocs, 
+  addDoc, 
+  deleteDoc,
+  doc,
+  setDoc,
+  getDoc
+} from "firebase/firestore";
+import { chargesMigratedData } from "@/data/chargesMigrated";
+
+export const migrateChargesToFirebase = async () => {
+  const user = auth.currentUser;
+  if (!user) {
+    console.log("❌ No user logged in");
+    return false;
+  }
+
+  try {
+    const userRef = doc(db, "users", user.uid);
+    const chargesRef = collection(db, "users", user.uid, "charges");
+
+    // VÉRIFIER SI MIGRATION DÉJÀ FAITE
+    const userDoc = await getDoc(userRef);
+    const migrationDone = userDoc.data()?.migrationDone || false;
+
+    if (migrationDone) {
+      console.log("✅ Migration déjà effectuée, skip");
+      return false;
+    }
+
+    console.log(`📊 Migration en cours...`);
+
+    // SUPPRIMER LES ANCIENNES CHARGES
+    const existingCharges = await getDocs(chargesRef);
+    console.log("🗑️ Nettoyage des anciennes charges...");
+    const deletePromises = existingCharges.docs.map((doc) =>
+      deleteDoc(doc.ref)
+    );
+    await Promise.all(deletePromises);
+
+    // AJOUTER LES 39 NOUVELLES CHARGES
+    console.log(`➕ Injection de ${chargesMigratedData.length} charges...`);
+    const addPromises = chargesMigratedData.map((charge: any) =>
+      addDoc(chargesRef, {
+        name: charge.name,
+        montantPrevu: parseFloat(charge.montantPrevu.toFixed(2)),
+        montantReel: parseFloat(charge.montantReel.toFixed(2)),
+        montantRestant: parseFloat(charge.montantRestant.toFixed(2)),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        custom: charge.custom || false,
+      })
+    );
+
+    await Promise.all(addPromises);
+
+    // MARQUER MIGRATION COMME FAITE
+    await setDoc(userRef, { migrationDone: true }, { merge: true });
+
+    console.log(`✅ Migration réussie : ${chargesMigratedData.length} charges`);
+    return true;
+  } catch (error) {
+    console.error("❌ Erreur migration:", error);
+    return false;
+  }
+};
+
+═══════════════════════════════════════════════════════════════════════════════
+CHECKLIST 1/3
+═══════════════════════════════════════════════════════════════════════════════
+
+☐ useChargesSummary.ts créé
+☐ ChargesRecap.tsx créé
+☐ migrateCharges.ts créé
+☐ Aucune erreur d'import/compilation
+
+PRÊT ? → Passe au PROMPT 2/3

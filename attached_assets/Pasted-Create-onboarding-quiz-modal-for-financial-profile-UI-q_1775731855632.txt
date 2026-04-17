@@ -1,0 +1,105 @@
+Create onboarding quiz modal for financial profile (UI & questions):
+
+1. **Quiz Modal Trigger**
+   - Display: After user type selection (Célibataire/Couple)
+   - Timing: First login after user setup
+   - Modal: Full screen, not dismissible until completed or skipped
+   - Progress: Step counter visible (Question X of 5)
+
+2. **Modal UI Structure**
+   - Header: "Découvrez votre profil financier" (neutral, inviting)
+   - Subtitle: "5 questions rapides (3-5 minutes)"
+   - Body: One question at a time (not all at once)
+   - Progress bar: Visual progress (████░░░░░░)
+   - Buttons: Large, mobile-friendly, clearly labeled
+
+3. **Question 1: Spending Style**
+   - Question: "Comment gérez-vous vos dépenses?"
+   - Options (5 buttons, one per line):
+     * "J'achète ce qui me plaît (plaisir immédiat)"
+     * "Je compte chaque euro (peur de manquer)"
+     * "J'aime les coups de chance"
+     * "Je réfléchis longtemps avant d'agir"
+     * "J'ai une stratégie et je la suis"
+   - Selection: Click button → immediate feedback
+   - Next button: [Continuer] (enabled after selection)
+
+4. **Question 2: Main Challenge**
+   - Question: "Votre plus grand défi financier?"
+   - Options (5 buttons):
+     * "Toujours à flux tendu, peu d'épargne"
+     * "Argent bloqué, peur d'investir"
+     * "Gains instables, pertes fréquentes"
+     * "J'apprends beaucoup mais n'agis pas"
+     * "Je progresse régulièrement"
+   - Same flow as Q1
+
+5. **Question 3: Risk Tolerance**
+   - Question: "Votre rapport au risque?"
+   - Options (5 buttons):
+     * "Je cherche l'excitation, gains rapides"
+     * "Je préfère la sécurité absolue"
+     * "J'aime comprendre avant d'agir"
+     * "J'équilibre sécurité et croissance"
+     * "Le risque me paraît loin, je vis au jour le jour"
+   - Same flow
+
+6. **Question 4: Primary Goal**
+   - Question: "Objectif principal dans 5 ans?"
+   - Options (5 buttons):
+     * "Plus de plaisir / me récompenser"
+     * "Grosse épargne sûre"
+     * "Un grand coup financier"
+     * "Comprendre comment s'enrichir"
+     * "Revenus passifs + richesse durable"
+   - Same flow
+
+7. **Question 5: Motivation**
+   - Question: "Ce qui vous motiverait le plus?"
+   - Options (5 buttons):
+     * "Satisfaire mes envies"
+     * "Être protégé financièrement"
+     * "Sentir l'adrénaline du jeu"
+     * "Maîtriser une stratégie complexe"
+     * "Voir mon argent travailler pour moi"
+   - Same flow
+
+8. **Skip Option**
+   - Available on every question
+   - Button: "Passer le questionnaire" (bottom, gray/secondary style)
+   - Clicking: User skips to dashboard
+   - Can retake later in Settings
+
+9. **Answer Selection UX**
+   - Visual feedback: Selected button highlighted (blue #60a5fa)
+   - No deselect (once clicked, stays selected)
+   - [Continuer] button appears below
+   - Mobile: Buttons stack vertically, full width
+   - Desktop: Optional 2-column layout
+
+10. **Navigation Between Questions**
+    - Forward: [Continuer] takes you to next question
+    - Back: [← Retour] available (go back, keep selection)
+    - Progress bar updates after each question
+    - Smooth transition between questions (no page reload feel)
+
+11. **Final Question UX**
+    - Q5 has different button:
+    - [Voir mon profil] instead of [Continuer]
+    - This triggers Profile Results Page (PROMPT 5B)
+    - OR [Passer] to skip to dashboard
+
+12. **Mobile Optimization**
+    - Full screen modal
+    - Large touch targets (buttons ≥ 48px)
+    - Text readable (font size ≥ 16px)
+    - No horizontal scroll
+    - Portrait orientation default
+
+13. **Accessibility**
+    - Clear labels on all buttons
+    - Progress counter text: "Question 2 of 5"
+    - High contrast: Dark text on light buttons
+    - Tab navigation supported (keyboard users)
+
+Current status: Build quiz modal UI with 5 questions, skip logic, progress tracking, and mobile-optimized buttons. One question per screen, selection feedback, navigate forward/back.

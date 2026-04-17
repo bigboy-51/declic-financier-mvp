@@ -1,0 +1,170 @@
+Implement login flow with couple/single detection and profile selection:
+
+1. **On User Login - Initial Check**
+   
+   After Firebase authentication success:
+   - Get currentUser.uid
+   - Query Firebase: users/{uid}/userType
+   
+   If userType doesn't exist (new account):
+   - Show modal: "Seul(e) ou En couple?"
+   - Options: [Seul(e)] [En couple]
+   - On selection: Save users/{uid}/userType = "single" or "couple"
+   - Proceed to Step 2
+   
+   If userType exists:
+   - Proceed to Step 2 (Profile selection if couple)
+
+2. **Profile Selection Modal (Couple Mode Only)**
+   
+   If userType = "couple":
+   - Show modal: "Qui êtes-vous?"
+   - Options: 
+     * [Je suis le mari / Chef de famille A]
+     * [Je suis l'épouse / Chef de famille B]
+   - On selection:
+     * Save to localStorage: currentProfile = "boss_profile" OR "wife_profile"
+     * Proceed to Step 3
+   
+   If userType = "single":
+   - Skip profile selection
+   - Set localStorage: currentProfile = "single_profile"
+   - Proceed to Step 3
+
+3. **localStorage Management - currentProfile**
+   
+   Key: "currentProfile"
+   Values: "boss_profile" | "wife_profile" | "single_profile"
+   
+   Lifecycle:
+   - Set on profile selection (couple) or after login (single)
+   - Persist across pages/refreshes
+   - Used in ALL Firebase queries: users/{uid}/[currentProfile]/
+   - Clear on logout: localStorage.removeItem("currentProfile")
+   
+   Implementation:// On profile selection
+localStorage.setItem("currentProfile", "boss_profile");// On any Firebase query
+const currentProfile = localStorage.getItem("currentProfile");
+const path = users/${uid}/${currentProfile}/quizCompleted;
+
+4. **Modal UI Design**
+   
+   MODAL 1: "Seul(e) ou En couple?" (New account)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Title: "Bienvenue dans Déclic Financier"
+   Subtitle: "Êtes-vous seul(e) ou en couple?"
+   
+   Buttons (equal width, stacked):
+   - [Seul(e)] (primary blue)
+   - [En couple] (secondary)
+   
+   On selection: Save and proceed
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   
+   MODAL 2: "Qui êtes-vous?" (Couple user, every login)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Title: "Qui êtes-vous?"
+   Subtitle: "Sélectionnez votre profil"
+   
+   Buttons (equal width, stacked):
+   - [Je suis le mari] (blue, or custom title)
+   - [Je suis l'épouse] (pink, or custom title)
+   
+   On selection: Save to localStorage and proceed
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5. **Navigation Flow**
+   
+   NEW ACCOUNT (First login):
+   Login → Check userType (doesn't exist)
+   → Modal: "Seul(e) ou En couple?"
+   → If "Seul(e)": 
+      * Save userType = "single"
+      * Set localStorage: currentProfile = "single_profile"
+      * Proceed to PROMPT 4A-2
+   → If "En couple": 
+      * Save userType = "couple"
+      * Show modal: "Qui êtes-vous?"
+      * Set localStorage: currentProfile = "boss_profile" OR "wife_profile"
+      * Proceed to PROMPT 4A-2
+   
+   RETURNING ACCOUNT - Single (Login 2+):
+   Login → Check userType = "single"
+   → Skip profile selection
+   → Set localStorage: currentProfile = "single_profile"
+   → Proceed to PROMPT 4A-2
+   
+   RETURNING ACCOUNT - Couple (Login 2+):
+   Login → Check userType = "couple"
+   → Show modal: "Qui êtes-vous?"
+   → On selection: Set localStorage: currentProfile = "boss_profile" OR "wife_profile"
+   → Proceed to PROMPT 4A-2
+
+6. **Edge Cases & Error Handling**
+   
+   Case 1: User closes profile selection modal
+   - Modal stays open (required selection)
+   - Cannot proceed without selecting
+   
+   Case 2: User changes device/browser
+   - localStorage is per-device
+   - Profile selection modal appears again (normal)
+   - Select profile → All data loads for that profile
+   
+   Case 3: localStorage cleared by browser
+   - On next action: Redirect to profile selection
+   - Re-select profile
+   - Continue
+   
+   Case 4: User logs out
+   - Clear localStorage: currentProfile
+   - On next login: Show profile selection again
+
+7. **Mobile Optimization**
+   
+   - Modal full screen on mobile (375px+)
+   - Button height: 48px minimum
+   - Button width: 100% of modal width
+   - Text readable: 16px+
+   - No horizontal scroll
+   - Proper spacing (20px padding)
+
+8. **Testing & Verification**
+   
+   Test NEW ACCOUNT (Single):
+   - First login: Modal "Seul(e) ou En couple?" appears
+   - Click [Seul(e)]: userType = "single" saved
+   - Check localStorage: currentProfile = "single_profile"
+   - Proceed to next step
+   
+   Test NEW ACCOUNT (Couple):
+   - First login: Modal "Seul(e) ou En couple?" appears
+   - Click [En couple]: userType = "couple" saved
+   - Second modal appears: "Qui êtes-vous?"
+   - Click [Je suis le mari]: localStorage: currentProfile = "boss_profile"
+   - Proceed to next step
+   
+   Test RETURNING ACCOUNT (Single):
+   - Login: userType = "single" exists
+   - Skip profile selection (no modal)
+   - Check localStorage: currentProfile = "single_profile"
+   - Proceed correctly
+   
+   Test RETURNING ACCOUNT (Couple):
+   - Login: userType = "couple" exists
+   - Modal "Qui êtes-vous?" appears
+   - Click [Je suis l'épouse]: localStorage: currentProfile = "wife_profile"
+   - Correct profile data loads
+   
+   Test localStorage Persistence:
+   - Set currentProfile = "boss_profile"
+   - Refresh page: currentProfile still = "boss_profile"
+   - Navigate between tabs: currentProfile persists
+   
+   Test Logout:
+   - Clear localStorage on logout
+   - Re-login: Profile selection appears again
+   - Select profile
+   - Correct profile loads
+
+Current status: Implement login flow with couple/single detection. Profile selection modal for couple users. localStorage management for currentProfile. Navigation based on account type.

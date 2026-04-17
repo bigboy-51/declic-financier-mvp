@@ -1,0 +1,218 @@
+Implement per-profile quiz status check and escalation logic:
+
+1. **After Onboarding Complete - Check Quiz Status**
+   
+   After STEP 1-4 (+ STEP 5 if couple) completed:
+   - Get currentProfile from localStorage
+   - Query Firebase: users/{uid}/[currentProfile]/quizCompleted
+   
+   If quizCompleted = true:
+   - User already completed quiz
+   - Go to Dashboard (PROMPT 4A-3 END → Dashboard)
+   - Load personalization for this profile
+   
+   If quizCompleted = false:
+   - User has NOT completed quiz
+   - Check: users/{uid}/[currentProfile]/quizEscalation/escalationLevel
+   - Show appropriate escalation (1, 2, or 3)
+
+2. **Escalation Levels - Per Profile**
+   
+   users/{uid}/[currentProfile]/quizEscalation/
+   ├── escalationLevel: 1 | 2 | 3
+   ├── skipCount: 0-3
+   ├── lastSkippedAt: ISO timestamp
+   ├── userContinuedWithoutQuiz: true/false
+   └── quizCompleted: true/false
+
+3. **ESCALATION 1: Soft Introduction (First Appearance)**
+   
+   Show modal:
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Title: "✨ Presque là!"
+   
+   Body text:
+   "Vous avez fourni vos données financières.
+   Maintenant, comprenez VOTRE style pour:
+   • Recevoir des défis adaptés
+   • Progresser plus vite
+   • Atteindre vos objectifs"
+   
+   Duration badge: "⏱️ 2 minutes"
+   
+   Buttons:
+   - [Faire le quiz maintenant] (primary, blue)
+   - [Plus tard] (secondary, gray)
+   
+   Behavior on [Faire le quiz]:
+   - Go to PROMPT 2 (Quiz Content)
+   
+   Behavior on [Plus tard]:
+   - Modal dismisses
+   - Update Firebase: escalationLevel = 1, skipCount = 1, lastSkippedAt = now
+   - Show reminder in Settings: "Complétez votre profil"
+   - Reminder banner appears on every login
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+4. **ESCALATION 2: Feature Lock + Counter (Next Login or 24h)**
+   
+   Show feature lock card on Dashboard:
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Card design:
+   Icon: 🔒
+   Title: "Dashboard personnalisé"
+   Subtitle: "Déverrouillez avec votre profil financier"
+   
+   Benefits:
+   "• Défis spécifiques à votre style
+   • Conseils adaptés
+   • Progression personnelle"
+   
+   Buttons:
+   - [Faire le quiz] (primary, blue)
+   - [Skip for now] (secondary, gray)
+   
+   Counter display: "⏳ 2 skips remaining"
+   
+   Behavior on [Faire le quiz]:
+   - Go to PROMPT 2 (Quiz Content)
+   
+   Behavior on [Skip for now]:
+   - Update Firebase: skipCount = 2, lastSkippedAt = now
+   - Counter display updates: "1 skip remaining"
+   - Card stays locked on dashboard
+   - Modal closes
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5. **ESCALATION 3: Hard Consequence + Persistent Banner (After 3rd Skip)**
+   
+   Show hard consequence modal:
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Title: "⚠️ Se connaître = clé du succès"
+   
+   Body text:
+   "Vous avez décidé de sauter votre profil 3 fois.
+   
+   Résultat:
+   ❌ Défis = génériques (pas adaptés à vous)
+   ❌ Dashboard = pas personnalisé
+   ❌ Conseils = standard pour tous
+   ❌ Stratégie = generic, pas ciblée
+   
+   Voulez-vous vraiment continuer sans connaître votre style?"
+   
+   Buttons:
+   - [Oui, continuer] (secondary, gray)
+   - [Faire le quiz maintenant] (primary, blue)
+   
+   Behavior on [Faire le quiz maintenant]:
+   - Go to PROMPT 2 (Quiz Content)
+   
+   Behavior on [Oui, continuer]:
+   - Update Firebase: userContinuedWithoutQuiz = true, escalationLevel = 3
+   - Modal dismisses
+   - Persistent banner appears on Dashboard:
+     "🎯 Débloquez votre personnalisation [Faire le quiz]"
+   - Locked card stays locked: "🔒 Dashboard personnalisé"
+   - Banner shows on EVERY login (per session dismissal only)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+6. **Quiz Completion - After Quiz Done (from PROMPT 2)**
+   
+   After user submits quiz answers:
+   - Calculate profileType (strategiste, economiste, etc)
+   - Save to Firebase: users/{uid}/[currentProfile]/
+     * quizCompleted = true
+     * profileType = result
+     * profileDescription = description
+     * quizCompletedAt = ISO timestamp
+     * quizAnswers = [answers array]
+   - Update escalation: quizEscalation/quizCompleted = true
+   - Locked card unlocks: "Dashboard personnalisé"
+   - Persistent banner disappears
+   - Go to Dashboard
+   - Apply personalization for this profile
+
+7. **Escalation Progression Logic**
+   
+   First skip:
+   - escalationLevel = 1
+   - skipCount = 1
+   - Show soft modal next login
+   
+   Second skip:
+   - escalationLevel = 2
+   - skipCount = 2
+   - Show feature lock card
+   
+   Third skip:
+   - escalationLevel = 3
+   - skipCount = 3
+   - Show hard consequence modal
+   
+   After 3rd skip:
+   - If user continues: userContinuedWithoutQuiz = true
+   - Persistent banner shows every login
+   - User can click banner anytime to do quiz
+
+8. **Per-Profile Independence**
+   
+   COUPLE MODE EXAMPLE:
+   
+   Boss profile:
+   - quizCompleted = true
+   - escalationLevel = 0 (quiz done)
+   
+   Wife profile:
+   - quizCompleted = false
+   - escalationLevel = 1 (first skip)
+   - skipCount = 1
+   
+   Result:
+   - Boss login: No quiz modal, dashboard personalized
+   - Wife login: Quiz escalation 1 appears (mandatory for wife)
+
+9. **Mobile Optimization**
+   
+   - Modals full screen on mobile
+   - Button height: 48px minimum
+   - Text readable: 16px+
+   - Counter visible and clear
+   - Feature lock card adapts to mobile width
+   - Banner readable on small screens
+
+10. **Testing & Verification**
+    
+    Test ESCALATION 1:
+    - After onboarding: quizCompleted = false
+    - Modal "✨ Presque là!" appears
+    - Click [Plus tard]: escalationLevel = 1, skipCount = 1
+    - Reminder shows in Settings
+    
+    Test ESCALATION 2:
+    - Next login: Feature lock card visible
+    - Counter shows: "2 skips remaining"
+    - Click [Skip for now]: skipCount = 2
+    - Counter updates to: "1 skip remaining"
+    
+    Test ESCALATION 3:
+    - After 3rd skip: Hard consequence modal appears
+    - Click [Oui, continuer]: Persistent banner appears
+    - Banner shows on every login
+    - Can click banner to do quiz
+    
+    Test Quiz Completion:
+    - At any escalation: Click [Faire le quiz]
+    - Go to PROMPT 2 (Quiz)
+    - After quiz submit: quizCompleted = true
+    - Locked card unlocks
+    - Banner disappears
+    - Dashboard shows personalization
+    
+    Test Per-Profile Independence (Couple):
+    - Boss: quizCompleted = true
+    - Wife: quizCompleted = false
+    - Boss login: No quiz modal
+    - Wife login: Quiz escalation appears
+
+Current status: Implement per-profile quiz status check. Show escalation modals (1, 2, 3) based on skip count. Feature lock card for escalation 2. Persistent banner for escalation 3. Handle quiz completion and unlock personalization.

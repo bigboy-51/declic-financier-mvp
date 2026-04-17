@@ -1,0 +1,292 @@
+Setup Firebase storage for onboarding data with couple mode support:
+
+1. **Firebase Structure - Shared Financial Data (Both profiles see)**
+   
+   users/{uid}/onboarding/
+   ├── completed: true/false (SHARED - financial setup done once)
+   ├── step1_completed: true/false
+   ├── step2_completed: true/false
+   ├── step3_completed: true/false
+   ├── step4_completed: true/false
+   ├── step5_completed: true/false (couple only)
+   └── lastUpdated: ISO timestamp
+   
+   users/{uid}/finances/ (SHARED)
+   ├── initialBalance: 1500
+   ├── currentBalance: 1200
+   └── lastUpdated: ISO timestamp
+   
+   users/{uid}/debts/ (SHARED)
+   ├── debt_[uniqueId]/
+   │   ├── name: "Crédit immobilier"
+   │   ├── monthlyPayment: 849
+   │   ├── remainingBalance: 80840
+   │   └── createdAt: ISO timestamp
+   └── debt_[uniqueId]/
+   
+   users/{uid}/charges/ (SHARED)
+   ├── Finances/
+   │   ├── charge_[uniqueId]/
+   │   │   ├── name: "Impôts"
+   │   │   ├── budgeted: 200
+   │   │   ├── actual: 200
+   │   │   └── createdAt: ISO timestamp
+   │   └── ...
+   ├── Logement/
+   ├── Loisirs/
+   ├── Transport/
+   ├── Santé/
+   ├── Remboursements/
+   └── Divers/
+   
+   users/{uid}/savingsGoals/ (SHARED)
+   ├── courtTerme/
+   │   ├── goal_[uniqueId]/
+   │   │   ├── name: "Fonds d'urgence"
+   │   │   ├── targetAmount: 1000
+   │   │   ├── currentSaved: 450
+   │   │   ├── timeline: "3 months"
+   │   │   └── createdAt: ISO timestamp
+   │   └── ...
+   ├── moyenTerme/
+   │   └── goal_[uniqueId]/
+   └── longTerme/
+       └── goal_[uniqueId]/
+
+2. **Firebase Structure - Personal Profile Data (Per profile)**
+   
+   users/{uid}/boss_profile/ (PERSONAL)
+   ├── quizCompleted: true/false
+   ├── profileType: "strategiste" | "economiste" | "plaisancier" | "chercheur" | "penseur"
+   ├── profileDescription: "Vous avez une vision long terme"
+   ├── quizCompletedAt: ISO timestamp
+   ├── quizAnswers: [0, 1, 2, 3, 4] (answer indices Q1-Q5)
+   └── quizEscalation/
+       ├── escalationLevel: 1 | 2 | 3
+       ├── skipCount: 0-3
+       ├── lastSkippedAt: ISO timestamp
+       ├── userContinuedWithoutQuiz: true/false
+       └── quizCompleted: true/false
+   
+   users/{uid}/wife_profile/ (PERSONAL - same structure)
+   ├── quizCompleted: false
+   ├── profileType: null
+   ├── quizEscalation/
+   │   ├── escalationLevel: 1
+   │   ├── skipCount: 0
+   │   └── ...
+   └── ...
+   
+   (For single user: use "single_profile" instead)
+
+3. **Data Persistence - Implementation**
+   
+   STEP 1 (Initial Balance):
+   - On complete: Save to Firebase
+   - Path: users/{uid}/finances/initialBalance = amount
+   - Also save: users/{uid}/finances/currentBalance = amount
+   - Also save: users/{uid}/finances/lastUpdated = ISO timestamp
+   - Mark: users/{uid}/onboarding/step1_completed = true
+   - Check: If all steps done → set onboarding/completed = true
+   
+   STEP 2 (Debts):
+   - On add debt: Save to Firebase
+   - Path: users/{uid}/debts/debt_[uniqueId]/
+   - Include: name, monthlyPayment, remainingBalance, createdAt
+   - On delete debt: Remove from Firebase
+   - On edit debt: Update in Firebase
+   - Mark: users/{uid}/onboarding/step2_completed = true (after first debt)
+   
+   STEP 3 (Charges):
+   - On add expense: Save to Firebase
+   - Path: users/{uid}/charges/[category]/charge_[uniqueId]/
+   - Include: name, budgeted, actual, createdAt
+   - On edit: Update in Firebase
+   - On delete: Remove from Firebase
+   - Mark: users/{uid}/onboarding/step3_completed = true (after first expense)
+   
+   STEP 4 (Savings Goals):
+   - On add goal: Save to Firebase
+   - Path: users/{uid}/savingsGoals/[timeframe]/goal_[uniqueId]/
+   - Include: name, targetAmount, currentSaved, timeline, createdAt
+   - On edit: Update in Firebase
+   - On delete: Remove from Firebase
+   - On reach 100%: Mark as completed, show celebration "🎉 Objectif atteint!"
+   - Mark: users/{uid}/onboarding/step4_completed = true (after first goal)
+   
+   STEP 5 (Couple - Invite Partner):
+   - On invite sent: Save to Firebase
+   - Path: users/{uid}/couple/inviteCode = [code]
+   - Mark: users/{uid}/onboarding/step5_completed = true
+   
+   Quiz Results (Per profile):
+   - On quiz complete: Save to Firebase
+   - Path: users/{uid}/[currentProfile]/
+   - Save: quizCompleted = true
+   - Save: profileType = result (strategiste, etc)
+   - Save: profileDescription = description text
+   - Save: quizCompletedAt = ISO timestamp
+   - Save: quizAnswers = [answers array]
+   
+   Quiz Escalation (Per profile):
+   - On skip: Update Firebase
+   - Path: users/{uid}/[currentProfile]/quizEscalation/
+   - Update: skipCount++
+   - Update: lastSkippedAt = ISO timestamp
+   - Update: escalationLevel = 1/2/3
+   - On completion: Set quizCompleted = true
+
+4. **Data Retrieval - On App Load**
+   
+   When user logs in:
+   1. Get currentUser.uid
+   2. Get currentProfile from localStorage (or show selection)
+   3. Load users/{uid}/onboarding/ → Show which steps completed
+   4. If onboarding/completed = true → Load financial data:
+      - Load users/{uid}/finances/ → Display solde on Dashboard
+      - Load users/{uid}/debts/ → Display Credits tab
+      - Load users/{uid}/charges/ → Display Charges tab + Budget
+      - Load users/{uid}/savingsGoals/ → Display Savings tab + Progress
+   5. Load users/{uid}/[currentProfile]/ → Load personal profile data:
+      - Load quizCompleted → Decide if quiz modal needed
+      - Load profileType → Apply personalization to dashboard
+      - Load quizEscalation → Check escalation level
+   6. If quiz not completed:
+      - Check escalationLevel
+      - Show appropriate escalation modal (1, 2, or 3)
+
+5. **Firebase Security Rules**
+   
+   {
+     "rules": {
+       "users": {
+         "$uid": {
+           ".read": "auth.uid === $uid",
+           ".write": "auth.uid === $uid",
+           
+           "onboarding": {
+             ".read": "auth.uid === $uid",
+             ".write": "auth.uid === $uid"
+           },
+           
+           "finances": {
+             ".read": "auth.uid === $uid",
+             ".write": "auth.uid === $uid"
+           },
+           
+           "debts": {
+             ".read": "auth.uid === $uid",
+             ".write": "auth.uid === $uid"
+           },
+           
+           "charges": {
+             ".read": "auth.uid === $uid",
+             ".write": "auth.uid === $uid"
+           },
+           
+           "savingsGoals": {
+             ".read": "auth.uid === $uid",
+             ".write": "auth.uid === $uid"
+           },
+           
+           "boss_profile": {
+             ".read": "auth.uid === $uid",
+             ".write": "auth.uid === $uid",
+             "quizEscalation": {
+               ".read": "auth.uid === $uid",
+               ".write": "auth.uid === $uid"
+             }
+           },
+           
+           "wife_profile": {
+             ".read": "auth.uid === $uid",
+             ".write": "auth.uid === $uid",
+             "quizEscalation": {
+               ".read": "auth.uid === $uid",
+               ".write": "auth.uid === $uid"
+             }
+           },
+           
+           "single_profile": {
+             ".read": "auth.uid === $uid",
+             ".write": "auth.uid === $uid",
+             "quizEscalation": {
+               ".read": "auth.uid === $uid",
+               ".write": "auth.uid === $uid"
+             }
+           },
+           
+           "couple": {
+             ".read": "auth.uid === $uid",
+             ".write": "auth.uid === $uid"
+           }
+         }
+       }
+     }
+   }
+
+6. **Migration from localStorage (if any)**
+   
+   If data exists in localStorage:
+   - On first Firebase sync: Detect old data
+   - Migrate: users/{uid}/[sections]/ in Firebase
+   - Verify data integrity
+   - Delete localStorage data after successful migration
+   - Log: Migration complete
+
+7. **Single vs Couple - Profile Path**
+   
+   SINGLE USER:
+   - Profile data: users/{uid}/single_profile/
+   - Quiz: users/{uid}/single_profile/quizCompleted
+   - Escalation: users/{uid}/single_profile/quizEscalation/
+   
+   COUPLE USER:
+   - Profile data: users/{uid}/boss_profile/ + users/{uid}/wife_profile/
+   - Quiz (boss): users/{uid}/boss_profile/quizCompleted
+   - Quiz (wife): users/{uid}/wife_profile/quizCompleted
+   - Escalation (boss): users/{uid}/boss_profile/quizEscalation/
+   - Escalation (wife): users/{uid}/wife_profile/quizEscalation/
+
+8. **Testing & Verification**
+   
+   Test Data Persistence - SINGLE USER:
+   - Add solde → Verify saved in Firebase: users/{uid}/finances/initialBalance
+   - Add debt → Verify saved in Firebase: users/{uid}/debts/debt_[id]/
+   - Add expense → Verify saved in Firebase: users/{uid}/charges/[category]/charge_[id]/
+   - Add savings goal → Verify saved in Firebase: users/{uid}/savingsGoals/[timeframe]/goal_[id]/
+   - Complete quiz → Verify saved in Firebase: users/{uid}/single_profile/quizCompleted = true
+   - Skip quiz → Verify saved in Firebase: users/{uid}/single_profile/quizEscalation/skipCount++
+   
+   Test Data Persistence - COUPLE USER:
+   - Boss adds solde → Verify saved (shared): users/{uid}/finances/initialBalance
+   - Wife login → Load same solde (shared) ✅
+   - Boss completes quiz → Verify: users/{uid}/boss_profile/quizCompleted = true
+   - Wife does NOT complete quiz → Verify: users/{uid}/wife_profile/quizCompleted = false
+   - Wife skips quiz 3x → Verify: users/{uid}/wife_profile/quizEscalation/escalationLevel = 3
+   
+   Test Data Retrieval - SINGLE USER:
+   - Logout, login again
+   - All financial data should reload from Firebase
+   - Profile should reload from Firebase
+   - No data loss
+   - Profile shows personalization
+   
+   Test Data Retrieval - COUPLE USER (Boss):
+   - Boss logout, login on different device
+   - Financial data loads (shared)
+   - boss_profile loads with personalization
+   - wife_profile NOT loaded (only boss_profile)
+   
+   Test Data Retrieval - COUPLE USER (Wife):
+   - Wife logout, login on same device
+   - Financial data loads (shared - same as boss)
+   - wife_profile loads with her personalization
+   - boss_profile NOT loaded (only wife_profile)
+   
+   Test Security Rules:
+   - User A cannot read user B's data (deny)
+   - User A can only write to their own uid (deny cross-write)
+   - Each profile can only read/write their own profile data
+
+Current status: Setup Firebase storage for all onboarding + profile data. Support couple mode (shared financial + personal profiles). Implement data persistence (save on each step). Implement data retrieval (load on login). Update security rules for couple. Test data integrity and isolation.

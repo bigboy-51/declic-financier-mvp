@@ -1,0 +1,50 @@
+Implement profile identification and light personalization based on quiz answers:
+
+1. **Answer to Profile Mapping**
+   - Store all 5 answers in temp state during quiz
+   - Answer format: indices (0-4 representing button position)
+   - After Q5: Map answers to profile type
+   - Mapping logic:
+     * Count which profile matches most answers
+     * Profile 1 (Plaisancier): Answers with index 0 → pleasure/happiness focus
+     * Profile 2 (Économe): Answers with index 1 → security/safety focus
+     * Profile 3 (Chercheur): Answers with index 2 → excitement/risk focus
+     * Profile 4 (Penseur): Answers with index 3 → analysis/understanding focus
+     * Profile 5 (Stratège): Answers with index 4 → strategy/goal focus
+   - Example: If user picks mostly index 1 across questions → Profile 2 (Économe)
+   - Tally: Count index matches, highest count = profile type
+
+2. **Profile Definitions (Non-Judgmental Tone)**
+   
+   PROFILE 1: Le Plaisancier
+   - Description: "Vous privilégiez le plaisir présent"
+   - Current challenge: "Flux tendu, peu d'épargne"
+   - Current behavior: Achète pour se sentir mieux
+   
+   PROFILE 2: L'Économe
+   - Description: "Vous privilégiez la sécurité"
+   - Current challenge: "Argent bloqué, peur d'investir"
+   - Current behavior: Épargne beaucoup, dépense peu
+   
+   PROFILE 3: Le Chercheur
+   - Description: "Vous recherchez l'excitation"
+   - Current challenge: "Gains instables, pertes fréquentes"
+   - Current behavior: Cherche gains rapides, suit tendances
+   
+   PROFILE 4: Le Penseur
+   - Description: "Vous aimez comprendre avant d'agir"
+   - Current challenge: "Apprend beaucoup mais n'agit pas"
+   - Current behavior: Analyse profondément, paralysé parfois
+   
+   PROFILE 5: Le Stratège
+   - Description: "Vous avez une vision long terme"
+   - Current challenge: "Continuer la progression"
+   - Current behavior: Discipline + stratégie
+
+3. **Results Page Display**
+   - Title: "Votre profil financier actuel"
+   - Content (in order):
+     * Profile name + emoji: "🎯 Le Stratège"
+     * Description: "Vous avez une vision long terme"
+     * Challenge: "Votre défi actuel: Continuer la progression"
+     * Disclaimer box (important):
