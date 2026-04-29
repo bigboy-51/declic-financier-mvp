@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import Index from "./pages/Index";
+import Admin from "./pages/Admin";
+import Diag from "./pages/Diag";
 import NotFound from "./pages/NotFound";
 
 class ErrorBoundary extends Component<
@@ -62,6 +64,8 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/diag" element={<Diag />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
