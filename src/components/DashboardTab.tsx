@@ -28,15 +28,19 @@ function BalanceCard({
   };
 
   const isNeg = balance < 0;
-  const color = isNeg ? "text-red-500" : balance < 200 ? "text-amber-500" : "text-emerald-500";
+  const gradientClass = isNeg
+    ? "balance-negative"
+    : balance < 200
+    ? "balance-warning"
+    : "balance-positive";
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 space-y-3">
+    <div className="bg-card border border-border rounded-2xl p-5 space-y-3" style={{ boxShadow: "var(--shadow-card)" }}>
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-muted-foreground">Solde disponible estimé</p>
         <Wallet className="w-4 h-4 text-muted-foreground" />
       </div>
-      <p className={`text-4xl font-black tabular-nums ${color}`}>{fmt(balance)}</p>
+      <p className={`text-4xl font-black tabular-nums ${gradientClass}`}>{fmt(balance)}</p>
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <span>Solde initial :</span>
         {editing ? (

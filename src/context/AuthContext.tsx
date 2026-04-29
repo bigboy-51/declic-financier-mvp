@@ -7,6 +7,7 @@ import {
   onAuthStateChanged,
   setPersistence,
   browserLocalPersistence,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { ref, get, set, update } from "firebase/database";
@@ -28,6 +29,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   saveQuizAnswers: (answers: QuizAnswers) => Promise<void>;
   skipQuiz: () => Promise<void>;
   saveOnboarding: (memberName: string, startingBalance: number) => Promise<void>;
@@ -99,6 +101,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("last-activity");
   };
 
+  const resetPassword = async (email: string) => {
+    await sendPasswordResetEmail(auth, email);
+  };
+
   const saveQuizAnswers = async (answers: QuizAnswers) => {
     if (!user) return;
     const profileType = computeProfile(answers);
@@ -144,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{
       user, loading, userProfile,
-      login, register, logout,
+      login, register, logout, resetPassword,
       saveQuizAnswers, skipQuiz, saveOnboarding, updateMemberName,
     }}>
       {children}
