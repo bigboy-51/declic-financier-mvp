@@ -4,78 +4,80 @@
 
 @layer base {
   :root {
+    /* Light mode — clean & minimal */
     --background: 220 20% 97%;
-    --foreground: 222 47% 11%;
+    --foreground: 237 60% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 237 60% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 237 60% 12%;
 
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 199 95% 45%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 263 70% 50%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 38 90% 50%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 14% 96%;
+    --muted: 220 14% 94%;
     --muted-foreground: 220 9% 46%;
 
-    --accent: 263 70% 96%;
-    --accent-foreground: 263 70% 40%;
+    --accent: 199 80% 92%;
+    --accent-foreground: 199 95% 35%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
     --success: 142 76% 36%;
-    --success-foreground: 210 40% 98%;
+    --success-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 221 83% 53%;
+    --border: 220 13% 88%;
+    --input: 220 13% 88%;
+    --ring: 199 95% 45%;
 
-    --radius: 0.75rem;
-
-    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
-    --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    --radius: 0.875rem;
   }
 
   .dark {
-    /* Claude.ai-inspired deep charcoal palette — no pure black */
-    --background: 215 28% 7%;
-    --foreground: 214 16% 92%;
+    /* Deep Navy Premium — base: #020430 */
+    --background: 237 92% 10%;
+    --foreground: 214 25% 93%;
 
-    --card: 225 28% 14%;
-    --card-foreground: 214 16% 92%;
+    --card: 236 72% 14%;
+    --card-foreground: 214 25% 93%;
 
-    --popover: 225 28% 14%;
-    --popover-foreground: 214 16% 92%;
+    --popover: 236 72% 14%;
+    --popover-foreground: 214 25% 93%;
 
-    --primary: 217 93% 68%;
-    --primary-foreground: 215 28% 7%;
+    --primary: 199 95% 58%;
+    --primary-foreground: 237 92% 8%;
 
-    --secondary: 263 70% 68%;
-    --secondary-foreground: 215 28% 7%;
+    --secondary: 38 90% 58%;
+    --secondary-foreground: 237 92% 8%;
 
-    --muted: 219 23% 20%;
-    --muted-foreground: 218 11% 65%;
+    --muted: 235 50% 20%;
+    --muted-foreground: 226 20% 60%;
 
-    --accent: 263 30% 22%;
-    --accent-foreground: 263 70% 80%;
+    --accent: 199 70% 22%;
+    --accent-foreground: 199 95% 78%;
 
-    --destructive: 0 91% 71%;
-    --destructive-foreground: 215 28% 7%;
+    --destructive: 0 91% 68%;
+    --destructive-foreground: 237 92% 8%;
 
-    --success: 142 69% 58%;
-    --success-foreground: 215 28% 7%;
+    --success: 142 69% 55%;
+    --success-foreground: 237 92% 8%;
 
-    --border: 219 23% 23%;
-    --input: 219 23% 23%;
-    --ring: 217 93% 68%;
+    --border: 235 45% 22%;
+    --input: 235 45% 22%;
+    --ring: 199 95% 58%;
 
-    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.35), 0 1px 2px -1px rgb(0 0 0 / 0.25);
-    --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.25);
+    --radius: 0.875rem;
+
+    --shadow-card: 0 4px 24px -4px rgb(2 4 48 / 0.8), 0 1px 4px rgb(0 0 0 / 0.4);
+    --shadow-card-hover: 0 8px 32px -4px rgb(2 4 48 / 0.9), 0 2px 8px rgb(56 189 248 / 0.08);
+    --glow-primary: 0 0 20px rgb(56 189 248 / 0.15);
+    --glow-gold: 0 0 20px rgb(245 158 11 / 0.15);
   }
 }
 
@@ -84,106 +86,136 @@
     @apply border-border;
   }
 
+  html.dark {
+    color-scheme: dark;
+  }
+
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground antialiased;
     font-family: 'Inter', sans-serif;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  .dark body,
-  .dark * {
-    font-weight: 500;
+  /* Premium dark body — subtle deep navy gradient */
+  .dark body {
+    background: radial-gradient(ellipse 80% 60% at 50% -10%, hsl(237 80% 16%) 0%, hsl(237 92% 10%) 60%);
+    min-height: 100vh;
+    font-weight: 450;
     letter-spacing: 0.01em;
   }
 }
 
 @layer components {
+
+  /* ── Cards ── */
   .card-finance {
-    @apply bg-card text-card-foreground rounded-xl p-4 md:p-4 shadow-[var(--shadow-card)] transition-shadow duration-200;
+    @apply bg-card text-card-foreground rounded-2xl p-4 transition-shadow duration-200;
+    box-shadow: var(--shadow-card, none);
   }
 
   .card-finance:hover {
-    @apply shadow-[var(--shadow-card-hover)];
+    box-shadow: var(--shadow-card-hover, none);
   }
 
+  /* Premium glass card (optional modifier) */
+  .dark .card-premium {
+    background: linear-gradient(135deg, hsl(236 72% 16%) 0%, hsl(236 65% 13%) 100%);
+    border: 1px solid hsl(235 45% 26%);
+    backdrop-filter: blur(12px);
+  }
+
+  /* ── Balance number — large premium display ── */
+  .dark .balance-positive {
+    background: linear-gradient(135deg, #4ade80 0%, #22d3ee 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .dark .balance-negative {
+    background: linear-gradient(135deg, #f87171 0%, #fb923c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .dark .balance-warning {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Glow effects for CTAs ── */
+  .dark .btn-glow {
+    box-shadow: var(--glow-primary);
+    transition: box-shadow 0.2s ease;
+  }
+
+  .dark .btn-glow:hover {
+    box-shadow: 0 0 32px rgb(56 189 248 / 0.30);
+  }
+
+  /* ── Navigation bar ── */
+  .dark nav {
+    background: linear-gradient(180deg, hsl(236 72% 14%) 0%, hsl(237 85% 11%) 100%);
+    border-top: 1px solid hsl(235 45% 22%);
+  }
+
+  /* ── Header ── */
+  .dark header {
+    background: linear-gradient(180deg, hsl(237 92% 10% / 0.98) 0%, hsl(237 85% 11% / 0.95) 100%);
+    border-bottom: 1px solid hsl(235 45% 22%);
+  }
+
+  /* ── Input fields ── */
+  .dark input,
+  .dark textarea,
+  .dark select {
+    background: hsl(235 60% 12%);
+    border-color: hsl(235 45% 24%);
+    color: hsl(214 25% 93%);
+  }
+
+  .dark input:focus,
+  .dark textarea:focus {
+    border-color: hsl(199 95% 58%);
+    box-shadow: 0 0 0 3px hsl(199 95% 58% / 0.12);
+  }
+
+  /* ── Separator lines ── */
+  .dark .border-border\/40 {
+    border-color: hsl(235 45% 22% / 0.6) !important;
+  }
+
+  /* ── Scrollbar ── */
+  .dark ::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .dark ::-webkit-scrollbar-track {
+    background: hsl(237 92% 10%);
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: hsl(235 45% 28%);
+    border-radius: 2px;
+  }
+
+  /* ── Animations ── */
   .action-glow {
     animation: actionGlow 0.5s ease-out;
   }
 
-  .stat-value {
-    @apply text-xl md:text-2xl font-bold text-foreground;
-  }
-
-  .stat-label {
-    @apply text-sm md:text-sm text-muted-foreground;
-  }
-
-  .tab-button {
-    @apply flex-1 py-3.5 px-2 md:px-4 text-sm font-medium text-muted-foreground transition-colors min-h-[48px];
-  }
-
-  .tab-button-active {
-    @apply text-primary border-b-2 border-primary bg-primary/5;
-  }
-
-  .input-inline {
-    @apply bg-transparent border-b border-transparent hover:border-muted-foreground/30 focus:border-primary focus:outline-none transition-colors text-right w-24;
-  }
-
-  .input-touch {
-    @apply min-h-[44px] px-3 py-2.5 rounded-lg bg-muted border-0 focus:ring-2 focus:ring-primary outline-none text-base;
-  }
-
-  .progress-bar {
-    @apply h-2.5 md:h-2 bg-muted rounded-full overflow-hidden;
-  }
-
-  .progress-fill {
-    @apply h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-300;
-  }
-
-  .btn-add {
-    @apply flex items-center gap-2 text-primary hover:bg-primary/10 px-4 py-3 md:py-2 rounded-lg transition-colors text-sm font-medium min-h-[48px];
-  }
-
-  .btn-delete {
-    @apply text-muted-foreground hover:text-destructive transition-colors p-2 min-w-[44px] min-h-[44px] flex items-center justify-center;
-  }
-
-  .btn-touch {
-    @apply min-h-[48px] px-4 py-3 rounded-lg font-medium text-base transition-colors;
+  @keyframes actionGlow {
+    0%   { box-shadow: 0 0 0 0 rgb(56 189 248 / 0.4); }
+    100% { box-shadow: 0 0 0 12px rgb(56 189 248 / 0); }
   }
 
   @keyframes shake {
-
-    0%,
-    100% {
-      transform: translateX(0);
-    }
-
-    20%,
-    60% {
-      transform: translateX(-4px);
-    }
-
-    40%,
-    80% {
-      transform: translateX(4px);
-    }
-  }
-
-  @keyframes actionGlow {
-    0% {
-      box-shadow: 0 0 0 0 rgb(96 165 250 / 0.45);
-    }
-
-    100% {
-      box-shadow: 0 0 0 12px rgb(96 165 250 / 0);
-    }
-  }
-
-  .animate-shake {
-    animation: shake 0.5s ease-in-out;
+    0%, 100% { transform: translateX(0); }
+    20%, 60%  { transform: translateX(-4px); }
+    40%, 80%  { transform: translateX(4px); }
   }
 
   @keyframes shrink-bar {
@@ -191,7 +223,22 @@
     to   { transform: scaleX(0); }
   }
 
-  .animate-shrink-bar {
-    animation: shrink-bar linear forwards;
+  @keyframes float-up {
+    0%   { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
   }
+
+  .animate-shake       { animation: shake 0.5s ease-in-out; }
+  .animate-shrink-bar  { animation: shrink-bar linear forwards; }
+  .animate-float-up    { animation: float-up 0.3s ease-out forwards; }
+
+  /* ── Legacy utility classes ── */
+  .stat-value  { @apply text-xl font-bold text-foreground; }
+  .stat-label  { @apply text-sm text-muted-foreground; }
+  .input-touch { @apply min-h-[44px] px-3 py-2.5 rounded-xl bg-muted border-0 focus:ring-2 focus:ring-primary outline-none text-base; }
+  .btn-add     { @apply flex items-center gap-2 text-primary hover:bg-primary/10 px-4 py-3 rounded-xl transition-colors text-sm font-medium min-h-[48px]; }
+  .btn-delete  { @apply text-muted-foreground hover:text-destructive transition-colors p-2 min-w-[44px] min-h-[44px] flex items-center justify-center; }
+  .btn-touch   { @apply min-h-[48px] px-4 py-3 rounded-xl font-medium text-base transition-colors; }
+  .progress-bar  { @apply h-2.5 bg-muted rounded-full overflow-hidden; }
+  .progress-fill { @apply h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-300; }
 }
