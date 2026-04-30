@@ -1,5 +1,19 @@
-import { useState } from "react";
-import { LogOut, LayoutDashboard, CreditCard, ShoppingCart } from "lucide-react";
+import { useState, useEffect } from "react";
+import { LogOut, LayoutDashboard, CreditCard, ShoppingCart, Sun, Moon } from "lucide-react";
+
+function useTheme() {
+  const [dark, setDark] = useState(() => {
+    const saved = localStorage.getItem("theme");
+    return saved ? saved === "dark" : true;
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark);
+    localStorage.setItem("theme", dark ? "dark" : "light");
+  }, [dark]);
+
+  return { dark, toggle: () => setDark((d) => !d) };
+}
 import { useAuth } from "@/context/AuthContext";
 import { FinancialProfileQuiz } from "@/components/FinancialProfileQuiz";
 import { OnboardingSetup } from "@/components/OnboardingSetup";
@@ -57,6 +71,7 @@ export default function Index() {
 function AppMain() {
   const { userProfile, logout } = useAuth();
   const [tab, setTab] = useState<Tab>("dashboard");
+  const { dark, toggle } = useTheme();
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -69,13 +84,22 @@ function AppMain() {
               <span className="text-sm text-muted-foreground">· {userProfile.memberName}</span>
             )}
           </div>
-          <button
-            onClick={logout}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors min-h-[36px] px-2"
-            data-testid="button-logout"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={toggle}
+              className="flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              aria-label="Changer le thème"
+            >
+              {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={logout}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors min-h-[36px] px-2"
+              data-testid="button-logout"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </header>
 
