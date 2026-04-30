@@ -78,8 +78,9 @@ function AppMain() {
       {/* Top bar */}
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-black text-foreground">Déclic</span>
+          <div className="flex items-center gap-2.5">
+            <img src="/logo-bleu.png" alt="Déclic Financier" className="hidden dark:block h-7 w-auto" />
+            <img src="/logo-blanc.png" alt="Déclic Financier" className="block dark:hidden h-7 w-auto" />
             {userProfile.memberName && (
               <span className="text-sm text-muted-foreground">· {userProfile.memberName}</span>
             )}
