@@ -104,7 +104,7 @@ function AppMain() {
       </header>
 
       {/* Tab content */}
-      <main className="flex-1 overflow-y-auto pb-20">
+      <main className="flex-1 overflow-y-auto pb-20" style={{ backgroundColor: "hsl(var(--content-bg, var(--background)))" }}>
         {tab === "dashboard" && <DashboardTab />}
         {tab === "charges" && <ChargesTab />}
         {tab === "courses" && <CoursesTab />}

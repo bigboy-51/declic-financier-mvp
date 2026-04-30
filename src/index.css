@@ -42,6 +42,7 @@
   .dark {
     /* Deep Navy Premium — base: #020430 */
     --background: 237 92% 10%;
+    --content-bg: 229 30% 7%;
     --foreground: 214 25% 93%;
 
     --card: 236 72% 14%;
