@@ -79,8 +79,8 @@ function AppMain() {
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <img src="/logo-bleu.png" alt="Déclic Financier" className="hidden dark:block h-9 w-auto" />
-            <img src="/logo-blanc.png" alt="Déclic Financier" className="block dark:hidden h-9 w-auto" />
+            <img src="/logo-bleu.png" alt="Déclic Financier" className="hidden dark:block h-11 w-auto" />
+            <img src="/logo-blanc.png" alt="Déclic Financier" className="block dark:hidden h-11 w-auto" />
             {userProfile.memberName && (
               <span className="text-sm text-muted-foreground">· {userProfile.memberName}</span>
             )}
