@@ -20,18 +20,21 @@ function generateId(): string {
 interface AddChargeModalProps {
   categoryId: string;
   categoryName: string;
-  onSave: (categoryId: string, name: string, prevu: number) => void;
+  onSave: (categoryId: string, name: string, prevu: number, reel: number) => void;
   onClose: () => void;
 }
 
 function AddChargeModal({ categoryId, categoryName, onSave, onClose }: AddChargeModalProps) {
   const [name, setName] = useState("");
   const [prevu, setPrevu] = useState("");
+  const [reel, setReel] = useState("");
+
+  const restant = (parseFloat(prevu) || 0) - (parseFloat(reel) || 0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    onSave(categoryId, name.trim(), parseFloat(prevu) || 0);
+    onSave(categoryId, name.trim(), parseFloat(prevu) || 0, parseFloat(reel) || 0);
     onClose();
   };
 
@@ -54,18 +57,39 @@ function AddChargeModal({ categoryId, categoryName, onSave, onClose }: AddCharge
               onChange={(e) => setName(e.target.value)}
             />
           </div>
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground mb-1 block">Montant prévu (€)</label>
-            <input
-              data-testid="input-add-charge-prevu"
-              type="number"
-              min="0"
-              step="0.01"
-              className="w-full border border-border rounded-xl px-3 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
-              placeholder="0,00"
-              value={prevu}
-              onChange={(e) => setPrevu(e.target.value)}
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground mb-1 block">Prévu (€)</label>
+              <input
+                data-testid="input-add-charge-prevu"
+                type="number"
+                min="0"
+                step="0.01"
+                className="w-full border border-border rounded-xl px-3 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                placeholder="0,00"
+                value={prevu}
+                onChange={(e) => setPrevu(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground mb-1 block">Réel (€)</label>
+              <input
+                data-testid="input-add-charge-reel"
+                type="number"
+                min="0"
+                step="0.01"
+                className="w-full border border-border rounded-xl px-3 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                placeholder="0,00"
+                value={reel}
+                onChange={(e) => setReel(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="px-3 py-2 rounded-lg bg-muted/40 border border-border/40">
+            <span className="text-xs text-muted-foreground">Restant : </span>
+            <span className={`text-sm font-semibold ${restant > 0 ? "text-emerald-600 dark:text-emerald-400" : restant < 0 ? "text-red-500" : "text-muted-foreground"}`}>
+              {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(restant)}
+            </span>
           </div>
           <div className="flex gap-2 pt-1">
             <button
@@ -306,12 +330,13 @@ export default function ChargesTab() {
     await set(ref(db, `${path}/updatedAt`), new Date().toISOString());
   };
 
-  const handleAddCharge = async (categoryId: string, name: string, prevu: number) => {
+  const handleAddCharge = async (categoryId: string, name: string, prevu: number, reel: number) => {
     if (!user) return;
     const id = generateId();
     const now = new Date().toISOString();
+    const restant = parseFloat((prevu - reel).toFixed(2));
     await set(ref(db, `users/${user.uid}/charges/${categoryId}/rubriques/${id}`), {
-      name, prevu, reel: 0, restant: prevu, locked: false, createdAt: now, updatedAt: now,
+      name, prevu, reel, restant, locked: false, createdAt: now, updatedAt: now,
     });
   };
 
