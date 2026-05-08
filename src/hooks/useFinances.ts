@@ -81,7 +81,10 @@ export function useFinances() {
 
   const markReceived = useCallback(async (id: string, date: string | null) => {
     if (!user) return;
-    await update(ref(db, `users/${user.uid}/incomes/${id}`), { receivedDate: date });
+    await update(ref(db, `users/${user.uid}/incomes/${id}`), {
+      receivedDate: date,
+      updatedAt: new Date().toISOString(),
+    });
   }, [user]);
 
   const updateIncome = useCallback(async (id: string, name: string, amount: number, receiptDay: number) => {
