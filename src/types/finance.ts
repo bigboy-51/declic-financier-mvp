@@ -31,6 +31,7 @@ export interface Expense {
   actualAmount: number;
   custom?: boolean;
   category?: ExpenseCategory;
+  durationMonths?: 1 | 3 | 6;
 }
 
 export interface GroceryExpense {
